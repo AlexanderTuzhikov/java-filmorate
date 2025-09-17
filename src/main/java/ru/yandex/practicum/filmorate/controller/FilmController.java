@@ -1,52 +1,52 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validation.FilmValidator;
 
 import java.util.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
-    private static final Logger log = LoggerFactory.getLogger(FilmController.class);
     private final Map<Long, Film> films = new HashMap<>();
 
     @PostMapping
-    private Film postFilm(@RequestBody Film film) {
-        FilmValidator.filmValidator(film);
-        Film newFilm = Film.builder()
+    public Film postFilm(@Valid @RequestBody Film film) {
+        Film validFilm = FilmValidator.filmValid(film)
+                .toBuilder()
                 .id(setId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
                 .build();
-        films.put(newFilm.getId(), newFilm);
-        log.info("Добавлен новый фильм: {}", newFilm);
-        return newFilm;
+        films.put(validFilm.getId(), validFilm);
+        log.info("Добавлен новый фильм: {}", validFilm);
+        return validFilm;
     }
 
     @PutMapping
-    private Film putFilm(@RequestBody Film film) {
-        FilmValidator.filmValidator(film);
-        Film oldFilm = films.get(film.getId());
-
-        Film newFilm = oldFilm.toBuilder()
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
+    public Film putFilm(@Valid @RequestBody @NotNull Film film) {
+        if (film.getId() <= 0) {
+            log.warn("Id {} должен быть больше 0", film.getId());
+            throw new IllegalArgumentException("Id должен быть больше 0");
+        }
+        if (!films.containsKey(film.getId())) {
+            log.warn("Фильм с id {} не найден", film.getId());
+            throw new IllegalArgumentException("Фильм с id " + film.getId() + " не найден");
+        }
+        Film validFilm = FilmValidator.filmValid(film)
+                .toBuilder()
+                .id(film.getId())
                 .build();
-        films.put(newFilm.getId(), newFilm);
-        log.info("Данные фильма с id {} обновлены", newFilm.getId());
-        return newFilm;
+        films.put(validFilm.getId(), validFilm);
+        log.info("Данные фильма с id {} обновлены: Новые данные: {}", validFilm.getId(), validFilm);
+        return validFilm;
     }
 
     @GetMapping
-    private List<Film> getFilms() {
+    public List<Film> getFilms() {
         return new ArrayList<>(films.values());
     }
 
