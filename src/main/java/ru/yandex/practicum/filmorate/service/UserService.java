@@ -25,7 +25,7 @@ public class UserService {
     }
 
     public User putUser(@NotNull User user) {
-        if(user.getId() == null) {
+        if (user.getId() == null) {
             log.warn("Ошибка валидации: id=null");
             throw new ValidationException("Ошибка валидации: id=null");
         }

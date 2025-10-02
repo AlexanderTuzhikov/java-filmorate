@@ -28,7 +28,7 @@ public class FilmService {
     }
 
     public Film putFilm(@NotNull Film film) {
-        if(film.getId() == null) {
+        if (film.getId() == null) {
             log.warn("Ошибка валидации: id=null");
             throw new ValidationException("Ошибка валидации: id=null");
         }
