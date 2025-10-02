@@ -15,25 +15,33 @@ import java.util.*;
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
 
-    public Film saveFilm(@NotNull Film film) {
-        if (film.getId() == null) {
-            film = film.toBuilder()
-                    .id(setId())
-                    .build();
-            log.info("Добавлен новый фильм: {}", film);
-        } else if (films.containsKey(film.getId())) {
+    @Override
+    public Film createFilm(@NotNull Film film) {
+        film = film.toBuilder()
+                .id(setId())
+                .build();
+        log.info("Создан новый фильм: {}", film);
+        saveFilm(film);
+
+        return films.get(film.getId());
+    }
+
+    @Override
+    public Film updateFilm(@NotNull Film film) {
+        if (films.containsKey(film.getId())) {
             Film existing = getFilm(film.getId());
             film = mergeFilmData(existing, film);
             log.info("Обновлен фильм: {}", film);
+            saveFilm(film);
         } else {
             log.warn("Попытка обновить не существующий фильм с id={}", film.getId());
             throw new NotFoundFilm("Фильм с id=" + film.getId() + " не найден");
         }
 
-        films.put(film.getId(), film);
         return films.get(film.getId());
     }
 
+    @Override
     public Film getFilm(Long id) {
         if (films.containsKey(id)) {
             return films.get(id);
@@ -43,6 +51,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
     public List<Film> getAllFilms() {
         if (films.isEmpty()) {
             log.warn("Запрошен пустой список фильмов");
@@ -52,6 +61,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return new ArrayList<>(films.values());
     }
 
+    @Override
     public void deleteFilm(Long id) {
         if (!films.containsKey(id)) {
             log.info("Удален фильм: {}", films.get(id));
@@ -62,6 +72,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
     public void deleteAllFilms() {
         log.info("Список фильмов очищен({}шт.)", films.size());
         films.clear();
@@ -72,6 +83,11 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .max(Long::compareTo)
                 .map(id -> id + 1)
                 .orElse(1L);
+    }
+
+    private void saveFilm(@NotNull Film film) {
+        films.put(film.getId(), film);
+        log.info("Сохранен фильм: {}", film);
     }
 
     private Film mergeFilmData(@NotNull Film existing, @NotNull Film newData) {

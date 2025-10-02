@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
@@ -20,17 +21,17 @@ public class UserService {
 
     public User postUser(User user) {
         User validUser = UserValidator.userValid(user);
-        return userStorage.saveUser(validUser);
+        return userStorage.createUser(validUser);
     }
 
     public User putUser(@NotNull User user) {
-        if (user.getId() <= 0) {
-            log.warn("id={} не должен быть null", user.getId());
-            throw new IllegalArgumentException("id=" + user.getId() + " не должен быть null");
+        if(user.getId() == null) {
+            log.warn("Ошибка валидации: id=null");
+            throw new ValidationException("Ошибка валидации: id=null");
         }
 
         User validUser = UserValidator.userValid(user);
-        return userStorage.saveUser(validUser);
+        return userStorage.updateUser(validUser);
     }
 
     public List<User> getUsers() {

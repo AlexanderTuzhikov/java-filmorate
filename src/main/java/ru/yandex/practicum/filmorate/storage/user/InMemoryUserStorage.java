@@ -13,13 +13,20 @@ import java.util.*;
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> users = new HashMap<>();
 
-    public User saveUser(@NotNull User user) {
-        if (user.getId() == null) {
-            user = user.toBuilder()
-                    .id(setId())
-                    .build();
-            log.info("Добавлен новый пользователь: {}", user);
-        } else if (users.containsKey(user.getId())) {
+    @Override
+    public User createUser(@NotNull User user) {
+        user = user.toBuilder()
+                .id(setId())
+                .build();
+        log.info("Создан новый пользователь: {}", user);
+        saveUser(user);
+
+        return users.get(user.getId());
+    }
+
+    @Override
+    public User updateUser(@NotNull User user) {
+        if (users.containsKey(user.getId())) {
             User existing = getUser(user.getId());
             user = mergeUserData(existing, user);
             log.info("Обновлен пользователь: {}", user);
@@ -27,11 +34,11 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn("Попытка обновить не существующего пользователя с id={}", user.getId());
             throw new NotFoundUser("Пользователь с id=" + user.getId() + " не найден");
         }
-
-        users.put(user.getId(), user);
+        saveUser(user);
         return users.get(user.getId());
     }
 
+    @Override
     public User getUser(Long id) {
         if (users.containsKey(id)) {
             return users.get(id);
@@ -41,6 +48,7 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
+    @Override
     public List<User> getAllUsers() {
         if (users.isEmpty()) {
             log.warn("Запрошен пустой список пользователей");
@@ -50,6 +58,7 @@ public class InMemoryUserStorage implements UserStorage {
         return new ArrayList<>(users.values());
     }
 
+    @Override
     public void deleteUser(Long id) {
         if (users.containsKey(id)) {
             log.info("Удален пользователь: {}", users.get(id));
@@ -60,6 +69,7 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
+    @Override
     public void deleteAllUsers() {
         log.info("Список пользователей очищен({}шт.)", users.size());
         users.clear();
@@ -70,6 +80,11 @@ public class InMemoryUserStorage implements UserStorage {
                 .max(Long::compareTo)
                 .map(id -> id + 1)
                 .orElse(1L);
+    }
+
+    private void saveUser(@NotNull User user) {
+        users.put(user.getId(), user);
+        log.info("Сохранен пользователь: {}", user);
     }
 
     private User mergeUserData(User existing, User newData) {

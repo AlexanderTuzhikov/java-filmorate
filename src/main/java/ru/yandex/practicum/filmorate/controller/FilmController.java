@@ -29,7 +29,7 @@ public class FilmController {
     @PutMapping
     public ResponseEntity<Film> putFilm(@Valid @RequestBody @NotNull Film film) {
         log.info("Получен запрос на обновление фильма id={}", film.getId());
-        return ResponseEntity.ok().body(filmService.postFilm(film));
+        return ResponseEntity.ok().body(filmService.putFilm(film));
     }
 
     @GetMapping

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -23,17 +24,17 @@ public class FilmService {
 
     public Film postFilm(Film film) {
         Film validFilm = FilmValidator.filmValid(film);
-        return filmStorage.saveFilm(validFilm);
+        return filmStorage.createFilm(validFilm);
     }
 
     public Film putFilm(@NotNull Film film) {
-        if (film.getId() == null) {
-            log.warn("id={} не должен быть null", film.getId());
-            throw new IllegalArgumentException("id=" + film.getId() + "  не должен быть null");
+        if(film.getId() == null) {
+            log.warn("Ошибка валидации: id=null");
+            throw new ValidationException("Ошибка валидации: id=null");
         }
 
         Film validFilm = FilmValidator.filmValid(film);
-        return filmStorage.saveFilm(validFilm);
+        return filmStorage.updateFilm(validFilm);
     }
 
     public List<Film> getFilms() {
