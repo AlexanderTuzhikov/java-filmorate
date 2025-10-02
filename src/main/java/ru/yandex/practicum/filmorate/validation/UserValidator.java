@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 public class UserValidator {
     public static User userValid(@NotNull User user) {
         return User.builder()
+                .id(user.getId())
                 .email(user.getEmail())
                 .login(loginValid(user))
                 .name(nameValid(user))
