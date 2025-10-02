@@ -1,65 +1,72 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.validation.UserValidator;
+import ru.yandex.practicum.filmorate.service.UserService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
+@AllArgsConstructor
 public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
+    private final UserService userService;
 
     @PostMapping
-    public User postUser(@Valid @RequestBody User user) {
-        User validUser = UserValidator.userValid(user)
-                .toBuilder()
-                .id(setId())
-                .build();
-        users.put(validUser.getId(), validUser);
-        log.info("Добавлен новый пользователь: {}", validUser);
-        return validUser;
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<User> postUser(@Valid @RequestBody User user) {
+        log.info("Получен запрос на добавление пользователя {}", user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.postUser(user));
     }
 
     @PutMapping
-    public User putUser(@Valid @RequestBody @NotNull User user) {
-        if (user.getId() <= 0) {
-            log.warn("Id {} должен быть больше 0", user.getId());
-            throw new IllegalArgumentException("Id должен быть больше 0");
-        }
-
-        if (!users.containsKey(user.getId())) {
-            log.warn("Пользователь с id {} не найден", user.getId());
-            throw new IllegalArgumentException("Пользователь с id " + user.getId() + " не найден");
-        }
-
-        User validUser = UserValidator.userValid(user)
-                .toBuilder()
-                .id(user.getId())
-                .build();
-
-        users.put(user.getId(), validUser);
-        log.info("Данные пользователя с id {} обновлены. Новые данные: {}", validUser.getId(), validUser);
-        return validUser;
+    public ResponseEntity<User> putUser(@Valid @RequestBody User user) {
+        log.info("Получен запрос на обновление пользователя id={}", user.getId());
+        return ResponseEntity.ok().body(userService.putUser(user));
     }
 
     @GetMapping
-    public List<User> getFilms() {
-        return new ArrayList<>(users.values());
+    public ResponseEntity<List<User>> getUsers() {
+        log.info("Получен запрос на получение списка пользователей");
+        return ResponseEntity.ok().body(userService.getUsers());
     }
 
-    private Long setId() {
-        return users.keySet().stream()
-                .max(Long::compareTo)
-                .map(id -> id + 1)
-                .orElse(1L);
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUser(@PathVariable("id") Long id) {
+        log.info("Получен запрос на получение пользователя");
+        return ResponseEntity.ok().body(userService.getUser(id));
     }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Void> putFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", id, friendId);
+        userService.putFriend(id, friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на удаление из друзей id={} от пользователя id={}", id, friendId);
+        userService.deleteFriend(id, friendId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/friends")
+    public ResponseEntity<List<User>> getFriends(@PathVariable("id") Long id) {
+        log.info("Получен запрос на получение списка друзей");
+        return ResponseEntity.ok().body(userService.getFriends(id));
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public ResponseEntity<List<User>> getCommonFriends(@PathVariable("id") Long id, @PathVariable("otherId") Long otherId) {
+        log.info("Получен запрос на получение списка общих друзей id={} и id={}", id, otherId);
+        return ResponseEntity.ok().body(userService.getCommonFriends(id, otherId));
+    }
+
 }

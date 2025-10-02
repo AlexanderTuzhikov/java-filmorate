@@ -13,6 +13,7 @@ public class FilmValidator {
 
     public static Film filmValid(@NotNull Film film) {
         return Film.builder()
+                .id(film.getId())
                 .name(film.getName())
                 .description(film.getDescription())
                 .releaseDate(releaseDateValid(film))
