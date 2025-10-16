@@ -114,3 +114,46 @@ WHERE user_id IN (
 Возвращает пользователей, которые являются друзьями одновременно у {id} и {other_id}.
 
 Использует вложенные подзапросы для пересечения списков друзей.
+
+ ## Фильмы
+
+### 1. Получить все фильмы
+
+```sql
+SELECT *
+FROM films;
+```
+
+Выводит все фильмы с полями: film_id, name, description, releaseDate, duration, mpa_id.
+
+### 2. Получить фильм по ID
+
+```sql
+SELECT *
+FROM films
+WHERE film_id = {id};
+```
+
+Возвращает один фильм с указанным film_id.
+
+### 3. Получить топ фильмов по количеству лайков
+
+```sql
+SELECT f.*,
+       COUNT(fl.user_id) AS rating
+FROM films AS f
+LEFT JOIN films_likes AS fl ON f.film_id = fl.film_id
+GROUP BY f.film_id
+ORDER BY rating DESC
+LIMIT {count};
+```
+
+LEFT JOIN соединяет фильмы с лайками, чтобы учитывать фильмы без лайков.
+
+COUNT(fl.user_id) AS rating — подсчитывает количество лайков каждого фильма.
+
+GROUP BY f.film_id — группировка по фильму.
+
+ORDER BY rating DESC — сортировка по убыванию лайков.
+
+LIMIT {count} — возвращает только первые {count} фильмов.
