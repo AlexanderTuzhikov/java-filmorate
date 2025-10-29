@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.dal.memory.InMemoryFilmInMemoryRepository;
+import ru.yandex.practicum.filmorate.dal.memory.InMemoryUserInMemoryRepository;
 import ru.yandex.practicum.filmorate.validation.FilmValidator;
 
 import java.util.Comparator;
@@ -19,12 +19,12 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserStorage userStorage;
+    private final InMemoryFilmInMemoryRepository filmStorage;
+    private final InMemoryUserInMemoryRepository userStorage;
 
     public Film postFilm(Film film) {
         Film validFilm = FilmValidator.filmValid(film);
-        return filmStorage.createFilm(validFilm);
+        return filmStorage.create(validFilm);
     }
 
     public Film putFilm(@NotNull Film film) {
@@ -34,31 +34,31 @@ public class FilmService {
         }
 
         Film validFilm = FilmValidator.filmValid(film);
-        return filmStorage.updateFilm(validFilm);
+        return filmStorage.update(validFilm);
     }
 
     public List<Film> getFilms() {
-        return filmStorage.getAllFilms();
+        return filmStorage.getAll();
     }
 
     public Film getFilm(Long id) {
-        return filmStorage.getFilm(id);
+        return filmStorage.get(id);
     }
 
     public void putLike(Long id, Long userId) {
-        Film film = filmStorage.getFilm(id);
-        User user = userStorage.getUser(userId);
+        Film film = filmStorage.get(id);
+        User user = userStorage.get(userId);
         film.addLike(user);
     }
 
     public void deleteLike(Long id, Long userId) {
-        Film film = filmStorage.getFilm(id);
-        User user = userStorage.getUser(userId);
+        Film film = filmStorage.get(id);
+        User user = userStorage.get(userId);
         film.removeLike(user);
     }
 
     public List<Film> getFilmsPopular(int count) {
-        return filmStorage.getAllFilms().stream()
+        return filmStorage.getAll().stream()
                 .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
                 .limit(count)
                 .collect(Collectors.toList());

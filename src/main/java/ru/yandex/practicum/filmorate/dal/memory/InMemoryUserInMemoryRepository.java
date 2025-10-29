@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.user;
+package ru.yandex.practicum.filmorate.dal.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -10,11 +10,11 @@ import java.util.*;
 
 @Slf4j
 @Component
-public class InMemoryUserStorage implements UserStorage {
+public class InMemoryUserInMemoryRepository implements BaseInMemoryRepository<User> {
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
-    public User createUser(@NotNull User user) {
+    public User create(@NotNull User user) {
         user = user.toBuilder()
                 .id(setId())
                 .build();
@@ -25,9 +25,9 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User updateUser(@NotNull User user) {
+    public User update(@NotNull User user) {
         if (users.containsKey(user.getId())) {
-            User existing = getUser(user.getId());
+            User existing = get(user.getId());
             user = mergeUserData(existing, user);
             log.info("Обновлен пользователь: {}", user);
         } else {
@@ -39,7 +39,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUser(Long id) {
+    public User get(Long id) {
         if (users.containsKey(id)) {
             return users.get(id);
         } else {
@@ -49,7 +49,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public List<User> getAll() {
         if (users.isEmpty()) {
             log.warn("Запрошен пустой список пользователей");
             return Collections.emptyList();
@@ -59,7 +59,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void delete(Long id) {
         if (users.containsKey(id)) {
             log.info("Удален пользователь: {}", users.get(id));
             users.remove(id);
@@ -67,12 +67,6 @@ public class InMemoryUserStorage implements UserStorage {
             log.warn("Попытка удалить не существующего пользователя с id={}", id);
             throw new NotFoundUser("Пользователь с id=" + id + " не найден");
         }
-    }
-
-    @Override
-    public void deleteAllUsers() {
-        log.info("Список пользователей очищен({}шт.)", users.size());
-        users.clear();
     }
 
     private Long setId() {

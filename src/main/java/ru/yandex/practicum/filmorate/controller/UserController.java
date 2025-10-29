@@ -6,6 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -20,15 +23,15 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<User> postUser(@Valid @RequestBody User user) {
-        log.info("Получен запрос на добавление пользователя {}", user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.postUser(user));
+    public ResponseEntity<UserDto> postUser(@Valid @RequestBody NewUserRequest request) {
+        log.info("Получен запрос на добавление пользователя {}", request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.postUser(request));
     }
 
     @PutMapping
-    public ResponseEntity<User> putUser(@Valid @RequestBody User user) {
-        log.info("Получен запрос на обновление пользователя id={}", user.getId());
-        return ResponseEntity.ok().body(userService.putUser(user));
+    public ResponseEntity<User> putUser(@Valid @RequestBody UpdateUserRequest request) {
+        log.info("Получен запрос на обновление пользователя id={}", request.getId());
+        return ResponseEntity.ok().body(userService.putUser(request));
     }
 
     @GetMapping

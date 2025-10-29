@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.Mpa;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -23,8 +25,12 @@ public class Film {
     @NotNull(message = "Продолжительность фильма не может быть пустой")
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private final int duration;
+    @NotNull
+    private final Mpa mpa;
     @Builder.Default
     private final Set<Long> likes = new HashSet<>();
+    @Builder.Default
+    private final Set<Genre> genres = new HashSet<>();
 
     public void addLike(User user) {
         likes.add(user.getId());
