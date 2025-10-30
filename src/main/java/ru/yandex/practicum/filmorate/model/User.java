@@ -43,5 +43,4 @@ public class User {
         friends.remove(user.getId());
         log.info("Пользователь: id={} удален из друзей id={}", user.getId(), this.getId());
     }
-
 }

@@ -9,16 +9,16 @@ import ru.yandex.practicum.filmorate.dal.db.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
-import ru.yandex.practicum.filmorate.enums.FriendshipStatus;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-import static ru.yandex.practicum.filmorate.mappers.UserMapper.mapToUserDto;
+import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 
 @Slf4j
 @Service
@@ -28,73 +28,94 @@ public class UserService {
     private final FriendshipDbRepository friendshipRepository;
 
     public UserDto postUser(NewUserRequest request) {
-        User validUser = UserValidator.userValid(request);
-        validUser = userRepository.save(validUser);
-        return mapToUserDto(validUser);
+        User user = mapToUser(request);
+        User validUser = UserValidator.userValid(user);
+        User savedUser = userRepository.save(validUser);
+        return mapToUserDto(savedUser);
     }
 
-    public User putUser(@NotNull UpdateUserRequest request) {
-        if (request.getId() == null) {
-            log.warn("Ошибка валидации: id=null");
-            throw new ValidationException("Ошибка валидации: id=null");
+    public UserDto putUser(@NotNull UpdateUserRequest request) {
+        Optional<User> findUser = userRepository.findById(request.getId());
+
+        if (findUser.isEmpty()) {
+            log.warn("Пользователь userId= {} для обновления не найден", request.getId());
+            throw new NotFoundUser("Пользователь для обновления не найден");
         }
 
-        User validUser = UserValidator.userValid(request);
-        return userRepository.update(validUser);
+        User user = updateUserFields(findUser.get(), request);
+        User validUser = UserValidator.userValid(user);
+        User updatedUser = userRepository.update(validUser);
+
+        return mapToUserDto(updatedUser);
     }
 
-    public List<User> getUsers() {
-        return userRepository.getAll();
+    public UserDto getUser(Long id) {
+        return userRepository.findById(id)
+                .map(UserMapper::mapToUserDto)
+                .orElseThrow(() -> new NotFoundUser("Пользователь с id=" + id + " не найден"));
     }
 
-    public User getUser(Long id) {
-        return userRepository.get(id);
+    public List<UserDto> getUsers() {
+        return userRepository.findAll().stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
 
-    public void putFriend(Long id, Long friendId) {
-        User user = userRepository.get(id);
-        User friend = userRepository.get(friendId);
-        user.addFriend(friend, FriendshipStatus.NOT_CONFIRMED);
-        friend.addFriend(user, FriendshipStatus.NOT_CONFIRMED);
-    }
+    public boolean putFriend(Long userId, Long friendId) {
+        Optional<User> user = userRepository.findById(userId);
+        Optional<User> friend = userRepository.findById(friendId);
 
-    public void deleteFriend(Long id, Long friendId) {
-        User user = userRepository.get(id);
-        User friend = userRepository.get(friendId);
-        user.removeFriend(friend);
-        friend.removeFriend(user);
-    }
-
-    public List<User> getFriends(Long id) {
-        User user = userRepository.get(id);
-
-        if (user.getFriends().isEmpty()) {
-            return List.of();
+        if (user.isEmpty() || friend.isEmpty()) {
+            log.warn("Попытка создать дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
+            throw new NotFoundUser("Пользователи для добавления в дружбу не найдены");
         }
 
-        return user.getFriends().keySet().stream()
-                .map(userRepository::get)
-                .collect(Collectors.toList());
+        boolean status = friendshipRepository.save(userId, friendId);
+
+        if (!status) {
+            log.error("Ошибка сервера при обработки запроса добавления в дружбу пользователей userId= {}," +
+                    " friendId= {}", userId, friendId);
+            throw new InternalServerException("Ошибка сервера при добавлении в друзья");
+        }
+
+        log.info("Пользователь id= {} добавил друга id= {} статус дружбы=CONFIRMED. " +
+                "Пользователь id= {} получил запрос на добавление в друзья от id= {} статус дружбы=NOT_CONFIRMED.", userId, friendId, friendId, userId);
+        return status;
     }
 
-    public List<User> getCommonFriends(Long id, Long otherId) {
-        User user = userRepository.get(id);
-        User otherUser = userRepository.get(otherId);
+    public void deleteFriend(Long userId, Long friendId) {
+        Optional<User> user = userRepository.findById(userId);
+        Optional<User> friend = userRepository.findById(friendId);
 
-        if (user.getFriends().isEmpty()) {
-            return List.of();
+        if (user.isEmpty() || friend.isEmpty()) {
+            log.warn("Попытка удалить дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
+            throw new NotFoundUser("Пользователи для удаления дружбы не найдены");
         }
 
-        Set<Long> userFriends = user.getFriends().keySet();
-        userFriends.retainAll(otherUser.getFriends().keySet());
+        friendshipRepository.delete(userId, friendId);
+    }
 
-        if (userFriends.isEmpty()) {
-            return List.of();
+    public List<UserDto> getFriends(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+
+        if (user.isEmpty()) {
+            log.warn("Попытка получить друзей не существующего пользователя userId= {}", userId);
+            throw new NotFoundUser("Пользователь не найден");
         }
 
-        return userFriends.stream()
-                .map(userRepository::get)
-                .collect(Collectors.toList());
+        return friendshipRepository.findAllFriends(userId);
+    }
+
+    public List<UserDto> getCommonFriends(Long userId, Long friendId) {
+        Optional<User> user = userRepository.findById(userId);
+        Optional<User> friend = userRepository.findById(friendId);
+
+        if (user.isEmpty() || friend.isEmpty()) {
+            log.warn("Попытка запроса общих друзей для не существующих пользователей userId= {}, friendId= {}", userId, friendId);
+            throw new NotFoundUser("Пользователи для запроса общих друзей не найдены");
+        }
+
+        return friendshipRepository.findCommonFriends(userId, friendId);
     }
 
 }

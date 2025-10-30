@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal.db;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
+@Slf4j
 public class BaseDbRepositoryImpl<T> implements BaseDbRepository<T> {
     protected final JdbcTemplate jdbc;
     protected final RowMapper<T> mapper;
@@ -31,13 +33,16 @@ public class BaseDbRepositoryImpl<T> implements BaseDbRepository<T> {
             return ps;
         }, keyHolder);
 
-        Long id = keyHolder.getKeyAs(Long.class);
+        Number key = keyHolder.getKey();
 
-        if (id != null) {
-            return id;
+        if (key != null) {
+            log.info("Пользователь успешно сохранен id= {}", key.longValue());
+            return key.longValue();
         } else {
-            throw new InternalServerException("Не удалось сохранить данные");
+            log.error("Ошибка сохранения пользователя");
+            throw new InternalServerException("Не удалось сохранить данные — ключ не сгенерирован");
         }
+
     }
 
     @Override
@@ -45,8 +50,11 @@ public class BaseDbRepositoryImpl<T> implements BaseDbRepository<T> {
         int rowsUpdated = jdbc.update(query, params);
 
         if (rowsUpdated == 0) {
+            log.error("Не удалось обновить данные пользователя");
             throw new InternalServerException("Не удалось обновить данные");
         }
+
+        log.info("Данные пользователя успешно обновлены");
     }
 
     @Override

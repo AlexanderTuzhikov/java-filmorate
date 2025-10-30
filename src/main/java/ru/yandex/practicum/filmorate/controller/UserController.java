@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
-import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -29,47 +28,45 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<User> putUser(@Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<UserDto> putUser(@Valid @RequestBody UpdateUserRequest request) {
         log.info("Получен запрос на обновление пользователя id={}", request.getId());
         return ResponseEntity.ok().body(userService.putUser(request));
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getUsers() {
+    public ResponseEntity<List<UserDto>> getUsers() {
         log.info("Получен запрос на получение списка пользователей");
         return ResponseEntity.ok().body(userService.getUsers());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable("id") Long id) {
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> getUser(@PathVariable("userId") Long userId) {
         log.info("Получен запрос на получение пользователя");
-        return ResponseEntity.ok().body(userService.getUser(id));
+        return ResponseEntity.ok().body(userService.getUser(userId));
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<Void> putFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
-        log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", id, friendId);
-        userService.putFriend(id, friendId);
+    @PutMapping("/{userId}/friends/{friendId}")
+    public ResponseEntity<Boolean> putFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", userId, friendId);
+        return ResponseEntity.ok().body(userService.putFriend(userId, friendId));
+    }
+
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public ResponseEntity<Void> deleteFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
+        log.info("Получен запрос на удаление из друзей id={} от пользователя id={}", userId, friendId);
+        userService.deleteFriend(userId, friendId);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}")
-    public ResponseEntity<Void> deleteFriend(@PathVariable("id") Long id, @PathVariable("friendId") Long friendId) {
-        log.info("Получен запрос на удаление из друзей id={} от пользователя id={}", id, friendId);
-        userService.deleteFriend(id, friendId);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{id}/friends")
-    public ResponseEntity<List<User>> getFriends(@PathVariable("id") Long id) {
+    @GetMapping("/{userId}/friends")
+    public ResponseEntity<List<UserDto>> getFriends(@PathVariable("userId") Long userId) {
         log.info("Получен запрос на получение списка друзей");
-        return ResponseEntity.ok().body(userService.getFriends(id));
+        return ResponseEntity.ok().body(userService.getFriends(userId));
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
-    public ResponseEntity<List<User>> getCommonFriends(@PathVariable("id") Long id, @PathVariable("otherId") Long otherId) {
-        log.info("Получен запрос на получение списка общих друзей id={} и id={}", id, otherId);
-        return ResponseEntity.ok().body(userService.getCommonFriends(id, otherId));
+    @GetMapping("/{userId}/friends/common/{otherId}")
+    public ResponseEntity<List<UserDto>> getCommonFriends(@PathVariable("userId") Long userId, @PathVariable("otherId") Long otherId) {
+        log.info("Получен запрос на получение списка общих друзей id={} и id={}", userId, otherId);
+        return ResponseEntity.ok().body(userService.getCommonFriends(userId, otherId));
     }
-
 }

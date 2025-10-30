@@ -29,31 +29,25 @@ public final class UserMapper {
                 .build();
     }
 
-    public static User updateImageFields(User user, UpdateUserRequest request) {
+    public static User updateUserFields(User user, UpdateUserRequest request) {
+        User.UserBuilder builder = user.toBuilder();
+
         if (request.hasEmail()) {
-            user.toBuilder()
-                    .email(request.getEmail())
-                    .build();
+            builder.email(request.getEmail());
         }
 
         if (request.hasLogin()) {
-            user.toBuilder()
-                    .login(request.getLogin())
-                    .build();
+            builder.login(request.getLogin());
         }
 
         if (request.hasName()) {
-            user.toBuilder()
-                    .name(request.getName())
-                    .build();
+            builder.name(request.getName());
         }
 
         if (request.hasBirthday()) {
-            user.toBuilder()
-                    .birthday(request.getBirthday())
-                    .build();
+            builder.birthday(request.getBirthday());
         }
 
-        return user;
+        return builder.build();
     }
 }
