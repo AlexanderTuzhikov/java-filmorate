@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.dto.film;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.Mpa;
+import ru.yandex.practicum.filmorate.enums.MpaName;
 
 import java.time.LocalDate;
 
@@ -16,5 +16,5 @@ public class FilmDto {
     private final String description;
     private final LocalDate releaseDate;
     private final int duration;
-    private final Mpa mpa;
+    private final MpaName mpaName;
 }

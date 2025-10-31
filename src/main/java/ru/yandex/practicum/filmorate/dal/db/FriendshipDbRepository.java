@@ -40,7 +40,7 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
             WHERE id IN (SELECT uf.friend_id
                         FROM users_friends AS uf
                         LEFT JOIN friendship_status AS fs ON uf.friendship_status_id = fs.id
-                        WHERE user_id = ? AND fs.status = 'CONFIRMED')
+                        WHERE user_id = ? AND fs.name = 'CONFIRMED')
             """;
     private static final String FIND_COMMON_FRIENDS_QUERY = """
             SELECT * FROM users
@@ -50,7 +50,7 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
                          JOIN friendship_status fs1 ON uf1.friendship_status_id = fs1.id
                          JOIN friendship_status fs2 ON uf2.friendship_status_id = fs2.id
                          WHERE uf1.user_id = ? AND uf2.user_id = ? AND
-                               fs1.status = 'CONFIRMED' AND fs2.status = 'CONFIRMED')
+                               fs1.name= 'CONFIRMED' AND fs2.name = 'CONFIRMED')
             """;
 
     public boolean save(Long userId, Long friendId) {
@@ -105,7 +105,7 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
     }
 
     private Optional<Long> getFriendStatusId(@NotNull FriendshipStatus status) {
-        String sql = "SELECT id FROM friendship_status WHERE status = ?";
+        String sql = "SELECT id FROM friendship_status WHERE name = ?";
 
         try {
             Long id = jdbc.queryForObject(sql, Long.class, status.name());

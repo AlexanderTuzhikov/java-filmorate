@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.dto.film;
 
 import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.Mpa;
+import ru.yandex.practicum.filmorate.enums.MpaName;
 
 import java.time.LocalDate;
 
@@ -11,7 +11,7 @@ public class UpdateFilmRequest {
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private Mpa mpa;
+    private MpaName mpaName;
 
     public boolean hasName() {
         return !(name == null || name.isBlank());
@@ -30,6 +30,6 @@ public class UpdateFilmRequest {
     }
 
     public boolean hasMpa() {
-        return !(mpa == null);
+        return !(mpaName == null);
     }
 }

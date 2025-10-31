@@ -10,13 +10,13 @@ DROP TABLE IF EXISTS mpa;
 CREATE TABLE mpa
 (
     id  INT AUTO_INCREMENT PRIMARY KEY,
-    mpa VARCHAR(20) UNIQUE
+    name VARCHAR(20) UNIQUE
 );
 
 CREATE TABLE genres
 (
     id    INT AUTO_INCREMENT PRIMARY KEY,
-    genre VARCHAR(50) UNIQUE
+    name VARCHAR(50) UNIQUE
 );
 
 CREATE TABLE films
@@ -42,7 +42,7 @@ CREATE TABLE users
 CREATE TABLE friendship_status
 (
     id     INT AUTO_INCREMENT PRIMARY KEY,
-    status VARCHAR(20) UNIQUE
+    name VARCHAR(20) UNIQUE
 );
 
 CREATE TABLE users_friends

@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.dal.db.mapper;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.enums.Mpa;
+import ru.yandex.practicum.filmorate.enums.MpaName;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.sql.ResultSet;
@@ -21,7 +21,7 @@ public class FilmMapper implements RowMapper<Film> {
                 .description(resultSet.getString("description"))
                 .releaseDate(releaseDate.toLocalDateTime().toLocalDate())
                 .duration(resultSet.getInt("duration"))
-                .mpa(Mpa.valueOf(resultSet.getString("mpa")))
+                .mpaName(MpaName.valueOf(resultSet.getString("mpa")))
                 .build();
     }
 }

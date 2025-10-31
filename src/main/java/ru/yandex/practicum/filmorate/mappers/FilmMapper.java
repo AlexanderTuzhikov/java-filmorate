@@ -18,7 +18,7 @@ public final class FilmMapper {
                 .description(request.getDescription())
                 .releaseDate(request.getReleaseDate())
                 .duration(request.getDuration())
-                .mpa(request.getMpa())
+                .mpaName(request.getMpaName())
                 .build();
     }
 
@@ -29,7 +29,7 @@ public final class FilmMapper {
                 .description(film.getDescription())
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
-                .mpa(film.getMpa())
+                .mpaName(film.getMpaName())
                 .build();
     }
 
@@ -61,7 +61,7 @@ public final class FilmMapper {
 
         if (request.hasMpa()) {
             film.toBuilder()
-                    .mpa(request.getMpa())
+                    .mpaName(request.getMpaName())
                     .build();
         }
 
