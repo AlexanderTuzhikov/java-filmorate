@@ -31,7 +31,7 @@ public class DataTest {
             .genres(Set.of(Genre.builder().id(2L).build()))
             .build();
 
-    public static User TEST_USER= User.builder()
+    public static User TEST_USER = User.builder()
             .email("test@mail.ru")
             .login("Тестовый логин")
             .name("Тестовое имя")
