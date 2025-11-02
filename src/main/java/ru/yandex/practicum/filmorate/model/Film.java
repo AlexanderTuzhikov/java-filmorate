@@ -1,11 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.enums.GenreName;
-import ru.yandex.practicum.filmorate.enums.MpaName;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -25,18 +26,19 @@ public class Film {
     @NotNull(message = "Продолжительность фильма не может быть пустой")
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private final int duration;
-    @NotNull
-    private final MpaName mpaName;
+    private final Mpa mpa;
     @Builder.Default
     private final Set<Long> likes = new HashSet<>();
     @Builder.Default
-    private final Set<GenreName> genreNames = new HashSet<>();
+    private final Set<Genre> genres = new HashSet<>();
 
+    @Deprecated
     public void addLike(User user) {
         likes.add(user.getId());
         log.info("Пользователь: id={} поставил лайк фильму: id={}", user.getId(), this.getId());
     }
 
+    @Deprecated
     public void removeLike(User user) {
         if (!likes.contains(user.getId())) {
             log.warn("Попытка удаления отсутствующего лайка: {}", user.getId());
@@ -45,5 +47,4 @@ public class Film {
         likes.remove(user.getId());
         log.info("Пользователь: id={} удалил лайк фильму id={}", user.getId(), this.getId());
     }
-
 }

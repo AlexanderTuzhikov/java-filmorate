@@ -1,17 +1,26 @@
 package ru.yandex.practicum.filmorate.dto.film;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.MpaName;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class UpdateFilmRequest {
+    @NotNull(message = "Id не может быть пустой")
+    private Long id;
     private String name;
+    @Size(max = 200, message = "Максимальная длина описания — 200 символов")
     private String description;
     private LocalDate releaseDate;
     private int duration;
-    private MpaName mpaName;
+    private Mpa mpa;
+    private Set<Genre> genres = new HashSet<>();
 
     public boolean hasName() {
         return !(name == null || name.isBlank());
@@ -30,6 +39,10 @@ public class UpdateFilmRequest {
     }
 
     public boolean hasMpa() {
-        return !(mpaName == null);
+        return !(mpa == null);
+    }
+
+    public boolean hasGenres() {
+        return !(genres.isEmpty());
     }
 }

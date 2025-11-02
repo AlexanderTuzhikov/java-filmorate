@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dal.db;
+package ru.yandex.practicum.filmorate.dal.db.base;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class BaseDbRepositoryImpl<T> implements BaseDbRepository<T> {
         Number key = keyHolder.getKey();
 
         if (key != null) {
-            log.info("Пользователь успешно сохранен id= {}", key.longValue());
+            log.info("Успешно сохранен id= {}", key.longValue());
             return key.longValue();
         } else {
             log.error("Ошибка сохранения пользователя");
@@ -54,7 +54,7 @@ public class BaseDbRepositoryImpl<T> implements BaseDbRepository<T> {
             throw new InternalServerException("Не удалось обновить данные");
         }
 
-        log.info("Данные пользователя успешно обновлены");
+        log.info("Данные успешно обновлены");
     }
 
     @Override

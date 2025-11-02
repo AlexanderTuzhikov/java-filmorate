@@ -26,7 +26,7 @@ CREATE TABLE films
     description  VARCHAR(200) NOT NULL,
     release_date DATE         NOT NULL,
     duration     INT          NOT NULL CHECK (duration > 0),
-    mpa_id       INT,
+    mpa_id      INT,
     FOREIGN KEY (mpa_id) REFERENCES mpa (id)
 );
 

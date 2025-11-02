@@ -1,9 +1,11 @@
-package ru.yandex.practicum.filmorate.dal.db;
+package ru.yandex.practicum.filmorate.dal.db.genre;
 
 import lombok.extern.slf4j.Slf4j;
+import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
@@ -17,15 +19,22 @@ public class GenreDbRepository extends BaseDbRepositoryImpl<Genre> {
         super(jdbc, mapper);
     }
 
+    @Language("SQL")
     private static final String FIND_GENRE_QUERY = """
             SELECT *
             FROM genres
             WHERE id = ?
             """;
-
+    @Language("SQL")
     private static final String FIND_ALL_GENRE_QUERY = """
             SELECT *
             FROM genres
+            """;
+    @Language("SQL")
+    private static final String FIND_FILM_GENRE_QUERY = """
+            SELECT *
+            FROM genres
+            WHERE id IN (SELECT fg.genre_id FROM film_genres AS fg WHERE film_id = ?)
             """;
 
     public Optional<Genre> findGenre(Long genreId) {
@@ -36,5 +45,7 @@ public class GenreDbRepository extends BaseDbRepositoryImpl<Genre> {
         return findMany(FIND_ALL_GENRE_QUERY);
     }
 
-
+    public List<Genre> findFilmGenre(Long filmId) {
+        return jdbc.query(FIND_FILM_GENRE_QUERY, mapper, filmId);
+    }
 }

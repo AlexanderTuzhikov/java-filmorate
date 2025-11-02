@@ -8,6 +8,6 @@ import lombok.Data;
 @Builder(toBuilder = true)
 public class GenreDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private final Long id;
-    private final String name;
+    private Long id;
+    private String name;
 }

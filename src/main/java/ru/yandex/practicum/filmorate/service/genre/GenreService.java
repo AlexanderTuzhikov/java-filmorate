@@ -1,12 +1,11 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.service.genre;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.db.GenreDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
-import ru.yandex.practicum.filmorate.mappers.GenreMapper;
 
 import java.util.List;
 
@@ -26,5 +25,4 @@ public class GenreService {
         return genreRepository.findGenre(genreId).map(GenreMapper::mapToGenreDto)
                 .orElseThrow(() -> new NotFoundMpa("Genre с id=" + genreId + " не найден"));
     }
-
 }

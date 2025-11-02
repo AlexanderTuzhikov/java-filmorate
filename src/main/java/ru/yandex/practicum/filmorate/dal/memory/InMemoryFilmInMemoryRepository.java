@@ -11,6 +11,7 @@ import java.util.*;
 
 @Slf4j
 @Component
+@Deprecated
 public class InMemoryFilmInMemoryRepository implements BaseInMemoryRepository<Film> {
     private final Map<Long, Film> films = new HashMap<>();
 

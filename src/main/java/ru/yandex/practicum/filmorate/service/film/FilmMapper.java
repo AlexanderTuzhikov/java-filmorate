@@ -1,24 +1,32 @@
-package ru.yandex.practicum.filmorate.mappers;
+package ru.yandex.practicum.filmorate.service.film;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.jetbrains.annotations.Contract;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@Slf4j
 public final class FilmMapper {
+
     public static Film mapToFilm(@NotNull NewFilmRequest request) {
+
         return Film.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .releaseDate(request.getReleaseDate())
                 .duration(request.getDuration())
-                .mpaName(request.getMpaName())
+                .mpa(request.getMpa())
+                .genres(request.getGenres())
                 .build();
     }
 
@@ -29,42 +37,46 @@ public final class FilmMapper {
                 .description(film.getDescription())
                 .releaseDate(film.getReleaseDate())
                 .duration(film.getDuration())
-                .mpaName(film.getMpaName())
+                .mpa(film.getMpa())
+                .genres(film.getGenres().stream()
+                        .sorted(Comparator.comparing(Genre::getId))
+                        .collect(Collectors.toCollection(LinkedHashSet::new)))
                 .build();
     }
 
-    @Contract("_, _ -> param1")
-    public static Film updateFilmFields(Film film, @NotNull UpdateFilmRequest request) {
+    public static Film updateFilmFields(@NotNull Film film, @NotNull UpdateFilmRequest request) {
+        Film.FilmBuilder builder = film.toBuilder();
+
         if (request.hasName()) {
-            film.toBuilder()
-                    .name(request.getName())
-                    .build();
+            builder.name(request.getName());
         }
 
         if (request.hasDescription()) {
-            film.toBuilder()
-                    .description(request.getDescription())
-                    .build();
+            builder.description(request.getDescription());
         }
 
         if (request.hasReleaseDate()) {
-            film.toBuilder()
-                    .releaseDate(request.getReleaseDate())
-                    .build();
+            builder.releaseDate(request.getReleaseDate());
+
         }
 
         if (request.hasDuration()) {
-            film.toBuilder()
-                    .duration(request.getDuration())
-                    .build();
+            builder.duration(request.getDuration());
+        }
+
+        if (request.hasReleaseDate()) {
+            builder.releaseDate(request.getReleaseDate());
+
         }
 
         if (request.hasMpa()) {
-            film.toBuilder()
-                    .mpaName(request.getMpaName())
-                    .build();
+            builder.mpa(request.getMpa());
         }
 
-        return film;
+        if (!request.hasGenres()) {
+            builder.genres(request.getGenres());
+        }
+
+        return builder.build();
     }
 }

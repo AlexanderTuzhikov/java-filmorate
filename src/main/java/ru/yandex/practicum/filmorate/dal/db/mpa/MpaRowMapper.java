@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dal.db.mapper;
+package ru.yandex.practicum.filmorate.dal.db.mpa;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @Component
-public class MpaMapper implements RowMapper<Mpa> {
+public class MpaRowMapper implements RowMapper<Mpa> {
     @Override
     public Mpa mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return Mpa.builder()

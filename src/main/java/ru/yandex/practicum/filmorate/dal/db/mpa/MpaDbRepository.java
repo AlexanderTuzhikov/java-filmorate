@@ -1,9 +1,11 @@
-package ru.yandex.practicum.filmorate.dal.db;
+package ru.yandex.practicum.filmorate.dal.db.mpa;
 
 import lombok.extern.slf4j.Slf4j;
+import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
@@ -17,12 +19,13 @@ public class MpaDbRepository extends BaseDbRepositoryImpl<Mpa> {
         super(jdbc, mapper);
     }
 
+    @Language("SQL")
     private static final String FIND_MPA_QUERY = """
             SELECT *
             FROM mpa
             WHERE id = ?
             """;
-
+    @Language("SQL")
     private static final String FIND_ALL_MPA_QUERY = """
             SELECT *
             FROM mpa

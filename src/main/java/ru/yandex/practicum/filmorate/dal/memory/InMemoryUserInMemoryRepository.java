@@ -10,6 +10,7 @@ import java.util.*;
 
 @Slf4j
 @Component
+@Deprecated
 public class InMemoryUserInMemoryRepository implements BaseInMemoryRepository<User> {
     private final Map<Long, User> users = new HashMap<>();
 

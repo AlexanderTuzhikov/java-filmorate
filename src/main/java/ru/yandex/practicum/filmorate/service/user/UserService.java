@@ -1,24 +1,23 @@
-package ru.yandex.practicum.filmorate.service;
+package ru.yandex.practicum.filmorate.service.user;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.db.FriendshipDbRepository;
-import ru.yandex.practicum.filmorate.dal.db.UserDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.friendship.FriendshipDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
-import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
 import java.util.List;
 import java.util.Optional;
 
-import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
+import static ru.yandex.practicum.filmorate.service.user.UserMapper.*;
 
 @Slf4j
 @Service
@@ -61,7 +60,7 @@ public class UserService {
                 .toList();
     }
 
-    public boolean putFriend(Long userId, Long friendId) {
+    public void putFriend(Long userId, Long friendId) {
         Optional<User> user = userRepository.findById(userId);
         Optional<User> friend = userRepository.findById(friendId);
 
@@ -80,7 +79,6 @@ public class UserService {
 
         log.info("Пользователь id= {} добавил друга id= {} статус дружбы=CONFIRMED. " +
                 "Пользователь id= {} получил запрос на добавление в друзья от id= {} статус дружбы=NOT_CONFIRMED.", userId, friendId, friendId, userId);
-        return status;
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -103,7 +101,9 @@ public class UserService {
             throw new NotFoundUser("Пользователь не найден");
         }
 
-        return friendshipRepository.findAllFriends(userId);
+        return friendshipRepository.findAllFriends(userId).stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
 
     public List<UserDto> getCommonFriends(Long userId, Long friendId) {
@@ -115,7 +115,8 @@ public class UserService {
             throw new NotFoundUser("Пользователи для запроса общих друзей не найдены");
         }
 
-        return friendshipRepository.findCommonFriends(userId, friendId);
+        return friendshipRepository.findCommonFriends(userId, friendId).stream()
+                .map(UserMapper::mapToUserDto)
+                .toList();
     }
-
 }

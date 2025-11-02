@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.mappers;
+package ru.yandex.practicum.filmorate.service.mpa;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

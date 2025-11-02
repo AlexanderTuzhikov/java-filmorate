@@ -7,10 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.film.FilmService;
 
-import java.util.*;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -21,25 +24,25 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Film> postFilm(@Valid @RequestBody Film film) {
-        log.info("Получен запрос на добавление фильма {}", film);
-        return ResponseEntity.status(HttpStatus.CREATED).body(filmService.postFilm(film));
+    public ResponseEntity<FilmDto> postFilm(@Valid @RequestBody NewFilmRequest request) {
+        log.info("Получен запрос на добавление фильма {}", request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(filmService.postFilm(request));
     }
 
     @PutMapping
-    public ResponseEntity<Film> putFilm(@Valid @RequestBody @NotNull Film film) {
-        log.info("Получен запрос на обновление фильма id={}", film.getId());
-        return ResponseEntity.ok().body(filmService.putFilm(film));
+    public ResponseEntity<FilmDto> putFilm(@Valid @RequestBody @NotNull UpdateFilmRequest request) {
+        log.info("Получен запрос на обновление фильма id={}", request.getId());
+        return ResponseEntity.ok().body(filmService.putFilm(request));
     }
 
     @GetMapping
-    public ResponseEntity<List<Film>> getFilms() {
+    public ResponseEntity<List<FilmDto>> getFilms() {
         log.info("Получен запрос на получение списка фильмов");
         return ResponseEntity.ok().body(filmService.getFilms());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Film> getFilm(@PathVariable("id") Long id) {
+    public ResponseEntity<FilmDto> getFilm(@PathVariable("id") Long id) {
         log.info("Получен запрос на получение фильма");
         return ResponseEntity.ok().body(filmService.getFilm(id));
     }
@@ -63,5 +66,4 @@ public class FilmController {
         log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
         return ResponseEntity.ok().body(filmService.getFilmsPopular(count));
     }
-
 }

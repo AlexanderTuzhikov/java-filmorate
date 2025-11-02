@@ -52,5 +52,4 @@ public class ErrorHandler {
         log.error("Внутренняя ошибка сервера. Error: {}", exception.getMessage());
         return new ErrorResponse(exception.getMessage(), "Внутренняя ошибка сервера");
     }
-
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
-import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 
 import java.util.List;
 
@@ -46,9 +46,10 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public ResponseEntity<Boolean> putFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
+    public ResponseEntity<Void> putFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
         log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", userId, friendId);
-        return ResponseEntity.ok().body(userService.putFriend(userId, friendId));
+        userService.putFriend(userId, friendId);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")

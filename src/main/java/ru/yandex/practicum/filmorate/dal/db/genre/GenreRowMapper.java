@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.dal.db.mapper;
+package ru.yandex.practicum.filmorate.dal.db.genre;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -9,7 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @Component
-public class GenreMapper implements RowMapper<Genre> {
+public class GenreRowMapper implements RowMapper<Genre> {
     @Override
     public Genre mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return Genre.builder()

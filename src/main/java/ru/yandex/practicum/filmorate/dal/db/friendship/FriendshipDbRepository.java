@@ -1,15 +1,15 @@
-package ru.yandex.practicum.filmorate.dal.db;
+package ru.yandex.practicum.filmorate.dal.db.friendship;
 
 import lombok.extern.slf4j.Slf4j;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.enums.FriendshipStatus;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
@@ -23,18 +23,22 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
         super(jdbc, mapper);
     }
 
+    @Language("SQL")
     private static final String INSERT_FRIEND_QUERY = """
             INSERT INTO users_friends (user_id, friend_id, friendship_status_id)
             VALUES (?, ?, ?)
             """;
+    @Language("SQL")
     private static final String UPDATE_FRIEND_QUERY = """
             UPDATE users_friends SET friendship_status_id = ?
             WHERE user_id = ? AND friend_id = ?
             """;
+    @Language("SQL")
     private static final String DELETE_FRIEND_QUERY = """
             DELETE FROM users_friends
             WHERE user_id = ? AND friend_id = ?
             """;
+    @Language("SQL")
     private static final String FIND_ALL_FRIENDS_QUERY = """
             SELECT * FROM users
             WHERE id IN (SELECT uf.friend_id
@@ -42,6 +46,7 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
                         LEFT JOIN friendship_status AS fs ON uf.friendship_status_id = fs.id
                         WHERE user_id = ? AND fs.name = 'CONFIRMED')
             """;
+    @Language("SQL")
     private static final String FIND_COMMON_FRIENDS_QUERY = """
             SELECT * FROM users
             WHERE id IN (SELECT uf1.friend_id
@@ -92,19 +97,18 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
         log.info("Дружба удалена id= {} и id= {}", userId, friendId);
     }
 
-    public List<UserDto> findAllFriends(Long userId) {
+    public List<User> findAllFriends(Long userId) {
             return jdbc.query(FIND_ALL_FRIENDS_QUERY, mapper, userId).stream()
-                    .map(UserMapper::mapToUserDto)
                     .toList();
     }
 
-    public List<UserDto> findCommonFriends(Long userId, Long otherUserId) {
+    public List<User> findCommonFriends(Long userId, Long otherUserId) {
         return jdbc.query(FIND_COMMON_FRIENDS_QUERY, mapper, userId, otherUserId).stream()
-                .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
     private Optional<Long> getFriendStatusId(@NotNull FriendshipStatus status) {
+        @Language("SQL")
         String sql = "SELECT id FROM friendship_status WHERE name = ?";
 
         try {
@@ -116,6 +120,7 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
     }
 
     private boolean isDuplicate(Long userId, Long friendId) {
+        @Language("SQL")
         String sql = "SELECT COUNT(*) FROM users_friends WHERE (user_id = ? AND friend_id = ?) " +
                 "OR (user_id = ? AND friend_id = ?)";
 

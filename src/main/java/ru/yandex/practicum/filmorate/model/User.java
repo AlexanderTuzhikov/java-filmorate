@@ -30,11 +30,13 @@ public class User {
     @Builder.Default
     private final Map<Long, FriendshipStatus> friends = new HashMap<>();
 
+    @Deprecated
     public void addFriend(User user, FriendshipStatus status) {
         friends.put(user.getId(), status);
         log.info("Пользователь: id={} добавлен в друзья id={}. Статус дружбы: status={}", user.getId(), this.getId(), status);
     }
 
+    @Deprecated
     public void removeFriend(User user) {
         if (!friends.containsKey(user.getId())) {
             log.warn("Попытка удаления из друзей: id={} не является другом id={}", user.getId(), this.getId());

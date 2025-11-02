@@ -11,9 +11,9 @@ import java.time.LocalDate;
 @Builder(toBuilder = true)
 public class UserDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private final Long id;
-    private final String email;
-    private final String login;
-    private final String name;
-    private final LocalDate birthday;
+    private Long id;
+    private String email;
+    private String login;
+    private String name;
+    private LocalDate birthday;
 }
