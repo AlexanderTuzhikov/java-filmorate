@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service.genre;
+package ru.yandex.practicum.filmorate.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.mappers.GenreMapper;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service.film;
+package ru.yandex.practicum.filmorate.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +12,13 @@ import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
 import java.util.Optional;
 
-import static ru.yandex.practicum.filmorate.service.film.FilmMapper.*;
+import static ru.yandex.practicum.filmorate.mappers.FilmMapper.*;
 import static ru.yandex.practicum.filmorate.validation.FilmValidator.filmValid;
 
 @Slf4j
@@ -73,7 +74,10 @@ public class FilmService {
         likeRepository.delete(filmId, userId);
     }
 
-    public List<Film> getFilmsPopular(int count) {
-        return likeRepository.findPopularFilms(count);
+    public List<FilmDto> getFilmsPopular(int count) {
+        return likeRepository.findPopularFilms(count)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }
