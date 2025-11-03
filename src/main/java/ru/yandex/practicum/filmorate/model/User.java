@@ -7,10 +7,11 @@ import jakarta.validation.constraints.PastOrPresent;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.enums.FriendshipStatus;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Data
@@ -27,20 +28,21 @@ public class User {
     @PastOrPresent(message = "Дата рождения не может быть в будущем.")
     private final LocalDate birthday;
     @Builder.Default
-    private final Set<Long> friends = new HashSet<>();
+    private final Map<Long, FriendshipStatus> friends = new HashMap<>();
 
-    public void addFriend(User user) {
-        friends.add(user.getId());
-        log.info("Пользователь: id={} добавлен в друзья id={}", user.getId(), this.getId());
+    @Deprecated
+    public void addFriend(User user, FriendshipStatus status) {
+        friends.put(user.getId(), status);
+        log.info("Пользователь: id={} добавлен в друзья id={}. Статус дружбы: status={}", user.getId(), this.getId(), status);
     }
 
+    @Deprecated
     public void removeFriend(User user) {
-        if (!friends.contains(user.getId())) {
+        if (!friends.containsKey(user.getId())) {
             log.warn("Попытка удаления из друзей: id={} не является другом id={}", user.getId(), this.getId());
         }
 
         friends.remove(user.getId());
         log.info("Пользователь: id={} удален из друзей id={}", user.getId(), this.getId());
     }
-
 }

@@ -8,9 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
-import ru.yandex.practicum.filmorate.exception.NotFoundUser;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.*;
 
 import java.util.List;
 
@@ -18,7 +16,7 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({NotFoundUser.class, NotFoundFilm.class})
+    @ExceptionHandler({NotFoundUser.class, NotFoundFilm.class, NotFoundMpa.class, NotFoundGenre.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(final @NotNull RuntimeException exception) {
         log.error("Запрос на несуществующий ресурс. Error: {}", exception.getMessage());
@@ -54,5 +52,4 @@ public class ErrorHandler {
         log.error("Внутренняя ошибка сервера. Error: {}", exception.getMessage());
         return new ErrorResponse(exception.getMessage(), "Внутренняя ошибка сервера");
     }
-
 }

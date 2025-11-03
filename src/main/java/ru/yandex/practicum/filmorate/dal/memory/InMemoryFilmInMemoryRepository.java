@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.film;
+package ru.yandex.practicum.filmorate.dal.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -9,14 +9,14 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
 
-
 @Slf4j
 @Component
-public class InMemoryFilmStorage implements FilmStorage {
+@Deprecated
+public class InMemoryFilmInMemoryRepository implements BaseInMemoryRepository<Film> {
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
-    public Film createFilm(@NotNull Film film) {
+    public Film create(@NotNull Film film) {
         film = film.toBuilder()
                 .id(setId())
                 .build();
@@ -27,9 +27,9 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film updateFilm(@NotNull Film film) {
+    public Film update(@NotNull Film film) {
         if (films.containsKey(film.getId())) {
-            Film existing = getFilm(film.getId());
+            Film existing = get(film.getId());
             film = mergeFilmData(existing, film);
             log.info("Обновлен фильм: {}", film);
             saveFilm(film);
@@ -42,7 +42,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilm(Long id) {
+    public Film get(Long id) {
         if (films.containsKey(id)) {
             return films.get(id);
         } else {
@@ -52,7 +52,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getAllFilms() {
+    public List<Film> getAll() {
         if (films.isEmpty()) {
             log.warn("Запрошен пустой список фильмов");
             return Collections.emptyList();
@@ -62,7 +62,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public void deleteFilm(Long id) {
+    public void delete(Long id) {
         if (!films.containsKey(id)) {
             log.info("Удален фильм: {}", films.get(id));
             films.remove(id);
@@ -70,12 +70,6 @@ public class InMemoryFilmStorage implements FilmStorage {
             log.warn("Попытка удалить не существующий фильм с id={}", id);
             throw new NotFoundFilm("Фильм с id=" + id + " не найден");
         }
-    }
-
-    @Override
-    public void deleteAllFilms() {
-        log.info("Список фильмов очищен({}шт.)", films.size());
-        films.clear();
     }
 
     private Long setId() {

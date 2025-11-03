@@ -18,6 +18,8 @@ public class FilmValidator {
                 .description(film.getDescription())
                 .releaseDate(releaseDateValid(film))
                 .duration(film.getDuration())
+                .mpa(film.getMpa())
+                .genres(film.getGenres())
                 .build();
     }
 
