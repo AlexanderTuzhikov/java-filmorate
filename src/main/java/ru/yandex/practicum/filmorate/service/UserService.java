@@ -4,13 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.friendship.FriendshipDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
@@ -26,6 +29,7 @@ import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 public class UserService {
     private final UserDbRepository userRepository;
     private final FriendshipDbRepository friendshipRepository;
+    private final FilmDbRepository filmDbRepository;
 
     public UserDto postUser(NewUserRequest request) {
         User user = mapToUser(request);
@@ -118,6 +122,12 @@ public class UserService {
 
         return friendshipRepository.findCommonFriends(userId, friendId).stream()
                 .map(UserMapper::mapToUserDto)
+                .toList();
+    }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        return filmDbRepository.findRecommendationsFilms(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
 }

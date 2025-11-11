@@ -30,6 +30,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private final GenreDbRepository genreRepository;
     private final MpaDbRepository mpaRepository;
 
+
     public FilmDbRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreDbRepository genreRepository,
                             MpaDbRepository mpaRepository) {
         super(jdbc, mapper);
@@ -77,6 +78,29 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private static final String DELETE_FILM_GENRE_QUERY = """
             DELETE FROM film_genres
             WHERE film_id = ? AND genre_id = ?;
+            """;
+    @Language("SQL")
+    private static final String FIND_RECOMMENDATIONS_FILM_QUERY = """
+            SELECT *
+            FROM films
+            WHERE id IN (
+                SELECT film_id
+                FROM films_likes
+                WHERE user_id = (
+                    SELECT user_id
+                    FROM films_likes
+                    WHERE film_id IN (
+                        SELECT film_id
+                        FROM films_likes
+                        WHERE user_id = ?)
+                    AND user_id != ?
+                    GROUP BY user_id
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1)
+            AND film_id NOT IN (
+                SELECT film_id
+                FROM films_likes
+                WHERE user_id = ?))
             """;
 
     public Film save(Film film) {
@@ -131,6 +155,12 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     public List<Film> findAll() {
         return findMany(FIND_ALL_FILM_QUERY).stream()
+                .map(this::getFilm)
+                .toList();
+    }
+
+    public List<Film> findRecommendationsFilms(Long userId) {
+        return jdbc.query(FIND_RECOMMENDATIONS_FILM_QUERY, mapper, userId, userId, userId).stream()
                 .map(this::getFilm)
                 .toList();
     }
