@@ -29,12 +29,14 @@ import java.util.Set;
 public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private final GenreDbRepository genreRepository;
     private final MpaDbRepository mpaRepository;
+    private final FilmRowMapper filmRowMapper;
 
     public FilmDbRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreDbRepository genreRepository,
-                            MpaDbRepository mpaRepository) {
+                            MpaDbRepository mpaRepository, FilmRowMapper filmRowMapper) {
         super(jdbc, mapper);
         this.genreRepository = genreRepository;
         this.mpaRepository = mpaRepository;
+        this.filmRowMapper = filmRowMapper;
     }
 
     @Language("SQL")
@@ -78,6 +80,19 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             DELETE FROM film_genres
             WHERE film_id = ? AND genre_id = ?;
             """;
+    @Language("SQL")
+    private static final String FIND_COMMON_FILMS_SQL = """
+        SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
+        FROM films f
+        JOIN films_likes fl1 ON f.id = fl1.film_id AND fl1.user_id = ?
+        JOIN films_likes fl2 ON f.id = fl2.film_id AND fl2.user_id = ?
+        LEFT JOIN (
+            SELECT film_id, COUNT(*) AS likes_count
+            FROM films_likes
+            GROUP BY film_id
+        ) l ON f.id = l.film_id
+        ORDER BY l.likes_count DESC
+        """;
 
     public Film save(Film film) {
         Long mpaId = film.getMpa() != null ? film.getMpa().getId() : null;
@@ -197,5 +212,12 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     private @NotNull List<Long> findFilmGenresId(Long filmId) {
         return jdbc.queryForList(FIND_ALL_FILM_GENRE_ID_QUERY, Long.class, filmId);
+    }
+
+    public List<Film> findCommonFilms(long userId, long friendId) {
+        return jdbc.query(FIND_COMMON_FILMS_SQL, filmRowMapper, userId, friendId)
+                .stream()
+                .map(this::getFilm)
+                .toList();
     }
 }

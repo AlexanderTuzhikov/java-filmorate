@@ -80,4 +80,17 @@ public class FilmService {
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
+
+    // Метод вызова общих фильмов с сортировкой по убыванию популярности
+    public List<FilmDto> getCommonFilms(long userId, long friendId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
+        userRepository.findById(friendId)
+                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + friendId));
+
+        List<Film> films = filmRepository.findCommonFilms(userId, friendId);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
 }

@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.mpa.MpaDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
 import ru.yandex.practicum.filmorate.mappers.MpaMapper;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -19,6 +20,7 @@ public class MpaService {
     public List<MpaDto> getAllMpa() {
         return mpaRepository.findAllMpa().stream()
                 .map(MpaMapper::mapToMpaDto)
+                .sorted(Comparator.comparing(MpaDto::getId)) // Сделал вывод по возрастанию как требуют тесты
                 .toList();
     }
 
