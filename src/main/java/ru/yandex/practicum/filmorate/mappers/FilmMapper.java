@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -27,6 +28,7 @@ public final class FilmMapper {
                 .duration(request.getDuration())
                 .mpa(request.getMpa())
                 .genres(request.getGenres())
+                .directors(request.getDirectors())
                 .build();
     }
 
@@ -40,6 +42,9 @@ public final class FilmMapper {
                 .mpa(film.getMpa())
                 .genres(film.getGenres().stream()
                         .sorted(Comparator.comparing(Genre::getId))
+                        .collect(Collectors.toCollection(LinkedHashSet::new)))
+                .directors(film.getDirectors().stream()
+                        .sorted(Comparator.comparing(Director::getId))
                         .collect(Collectors.toCollection(LinkedHashSet::new)))
                 .build();
     }
@@ -75,6 +80,10 @@ public final class FilmMapper {
 
         if (!request.hasGenres()) {
             builder.genres(request.getGenres());
+        }
+
+        if (!request.hasDirectors()) {
+            builder.directors(request.getDirectors());
         }
 
         return builder.build();

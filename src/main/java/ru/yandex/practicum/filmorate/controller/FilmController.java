@@ -10,8 +10,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -64,5 +67,13 @@ public class FilmController {
     public ResponseEntity<List<FilmDto>> getFilmsPopular(@RequestParam(name = "count", required = false, defaultValue = "10") int count) {
         log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
         return ResponseEntity.ok().body(filmService.getFilmsPopular(count));
+    }
+
+    @GetMapping("/director/{directorId}")
+    public ResponseEntity<Collection<Film>> getSortedFilms(
+            @PathVariable("directorId") Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
     }
 }

@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dto.film;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
@@ -22,4 +23,6 @@ public class FilmDto {
     private Mpa mpa;
     @Builder.Default
     private Set<Genre> genres = new HashSet<>();
+    @Builder.Default
+    private Set<Director> directors = new HashSet<>();
 }

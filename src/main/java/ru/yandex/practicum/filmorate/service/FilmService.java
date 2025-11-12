@@ -10,11 +10,13 @@ import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,5 +81,12 @@ public class FilmService {
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    public Collection<Film> getSortedFilms(Long directorId, String sortBy) {
+        if (!sortBy.equals("year") && !sortBy.equals("likes")) {
+            throw new InternalServerException("Некорректный параметр сортировки.");
+        }
+          return filmRepository.getSortedFilms(directorId, sortBy);
     }
 }
