@@ -4,13 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.db.event.EventDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.friendship.FriendshipDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
+import ru.yandex.practicum.filmorate.dto.event.EventDto;
+import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.mappers.EventMapper;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
@@ -26,6 +32,7 @@ import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 public class UserService {
     private final UserDbRepository userRepository;
     private final FriendshipDbRepository friendshipRepository;
+    private final EventDbRepository eventRepository;
 
     public UserDto postUser(NewUserRequest request) {
         User user = mapToUser(request);
@@ -80,6 +87,8 @@ public class UserService {
 
         log.info("Пользователь id= {} добавил друга id= {} статус дружбы=CONFIRMED. " +
                 "Пользователь id= {} получил запрос на добавление в друзья от id= {} статус дружбы=NOT_CONFIRMED.", userId, friendId, friendId, userId);
+
+        saveEvent(userId, friendId, Operation.ADD);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -92,6 +101,7 @@ public class UserService {
         }
 
         friendshipRepository.delete(userId, friendId);
+        saveEvent(userId, friendId, Operation.REMOVE);
     }
 
     public List<UserDto> getFriends(Long userId) {
@@ -119,5 +129,28 @@ public class UserService {
         return friendshipRepository.findCommonFriends(userId, friendId).stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
+    }
+
+    public List<EventDto> getUserEvents(Long userId) {
+        return eventRepository.findUserEvents(userId).stream()
+                .map(EventMapper::mapEventDto)
+                .toList();
+    }
+
+    public List<EventDto> getAllEvents() {
+        return eventRepository.findAllEvents().stream()
+                .map(EventMapper::mapEventDto)
+                .toList();
+    }
+
+    private void saveEvent(Long userId, Long entityId, Operation operation) {
+        NewEventRequest newEvent = NewEventRequest.builder()
+                .userId(userId)
+                .entityId(entityId)
+                .eventType(EventType.FRIEND)
+                .operation(operation)
+                .build();
+
+        eventRepository.save(newEvent);
     }
 }

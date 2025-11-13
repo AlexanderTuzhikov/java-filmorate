@@ -4,12 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.db.event.EventDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.like.LikeDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
+import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
 import ru.yandex.practicum.filmorate.exception.NotFoundUser;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
@@ -28,6 +32,7 @@ public class FilmService {
     private final FilmDbRepository filmRepository;
     private final UserDbRepository userRepository;
     private final LikeDbRepository likeRepository;
+    private final EventDbRepository eventRepository;
 
     public FilmDto postFilm(NewFilmRequest request) {
         Film film = mapToFilm(request);
@@ -66,12 +71,14 @@ public class FilmService {
         filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
         userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
         likeRepository.save(filmId, userId);
+        saveEvent(userId, filmId, Operation.ADD);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
         userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
         likeRepository.delete(filmId, userId);
+        saveEvent(userId, filmId, Operation.REMOVE);
     }
 
     public List<FilmDto> getFilmsPopular(int count) {
@@ -79,5 +86,16 @@ public class FilmService {
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    private void saveEvent(Long userId, Long entityId, Operation operation) {
+        NewEventRequest newEvent = NewEventRequest.builder()
+                .userId(userId)
+                .entityId(entityId)
+                .eventType(EventType.LIKE)
+                .operation(operation)
+                .build();
+
+        eventRepository.save(newEvent);
     }
 }
