@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS review_likes;
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS films_likes;
 DROP TABLE IF EXISTS film_genres;
 DROP TABLE IF EXISTS users_friends;
@@ -74,3 +76,22 @@ CREATE TABLE films_likes
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE reviews (
+                         review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                         content TEXT NOT NULL,
+                         is_positive BOOLEAN NOT NULL,
+                         user_id BIGINT NOT NULL,
+                         film_id BIGINT NOT NULL,
+                         useful INT DEFAULT 0,
+                         FOREIGN KEY (user_id) REFERENCES users(id),
+                         FOREIGN KEY (film_id) REFERENCES films(id)
+);
+
+CREATE TABLE review_likes (
+                              review_id BIGINT,
+                              user_id BIGINT,
+                              rating INT CHECK (rating IN (-1, 1)),
+                              PRIMARY KEY (review_id, user_id),
+                              FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
+                              FOREIGN KEY (user_id) REFERENCES users(id)
+);
