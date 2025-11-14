@@ -44,6 +44,7 @@ public class UserController {
         log.info("Получен запрос на получение пользователя");
         return ResponseEntity.ok().body(userService.getUser(userId));
     }
+
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteFilm(@PathVariable("userId") Long userId) {
         log.info("Получен запрос на удаление пользователя  id={}", userId);
