@@ -37,6 +37,7 @@ public class FilmController {
     @GetMapping
     public ResponseEntity<List<FilmDto>> getFilms() {
         log.info("Получен запрос на получение списка фильмов");
+        System.out.println(filmService.getFilms().stream().map(FilmDto::getId).toList());
         return ResponseEntity.ok().body(filmService.getFilms());
     }
 
@@ -44,6 +45,13 @@ public class FilmController {
     public ResponseEntity<FilmDto> getFilm(@PathVariable("id") Long id) {
         log.info("Получен запрос на получение фильма");
         return ResponseEntity.ok().body(filmService.getFilm(id));
+    }
+
+    @DeleteMapping("/{filmId}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable("filmId") Long filmId) {
+        log.info("Получен запрос на удаление фильма  id={}", filmId);
+        filmService.deleteFilm(filmId);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -55,7 +63,6 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public ResponseEntity<Void> deleteLike(@PathVariable("id") Long id, @PathVariable("userId") Long userId) {
-        log.info("Получен запрос на удаление лайка к фильму id={}, от пользователя id={}", id, userId);
         filmService.deleteLike(id, userId);
         return ResponseEntity.ok().build();
     }

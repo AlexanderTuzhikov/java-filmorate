@@ -35,10 +35,12 @@ public class LikeDbRepository {
             """;
     @Language("SQL")
     private static final String FIND_POPULAR_FILMS_QUERY = """
-            SELECT film_id FROM films_likes
-            GROUP BY film_id
-            ORDER BY COUNT(user_id) DESC
-            LIMIT ?
+            SELECT f.id AS film_id
+                   FROM films AS f
+                   LEFT JOIN films_likes AS fl ON f.id = fl.film_id
+                   GROUP BY f.id
+                   ORDER BY COUNT(fl.user_id) DESC
+                   LIMIT ?
             """;
 
     public void save(Long filmId, Long userId) {
