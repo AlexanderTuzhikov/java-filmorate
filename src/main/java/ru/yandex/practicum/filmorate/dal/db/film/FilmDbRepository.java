@@ -29,14 +29,12 @@ import java.util.Set;
 public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private final GenreDbRepository genreRepository;
     private final MpaDbRepository mpaRepository;
-    private final FilmRowMapper filmRowMapper;
 
     public FilmDbRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreDbRepository genreRepository,
-                            MpaDbRepository mpaRepository, FilmRowMapper filmRowMapper) {
+                            MpaDbRepository mpaRepository) {
         super(jdbc, mapper);
         this.genreRepository = genreRepository;
         this.mpaRepository = mpaRepository;
-        this.filmRowMapper = filmRowMapper;
     }
 
     @Language("SQL")
@@ -93,6 +91,28 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         ) l ON f.id = l.film_id
         ORDER BY l.likes_count DESC
         """;
+    private static final String FIND_RECOMMENDATIONS_FILM_QUERY = """
+            SELECT *
+            FROM films
+            WHERE id IN (
+                SELECT film_id
+                FROM films_likes
+                WHERE user_id = (
+                    SELECT user_id
+                    FROM films_likes
+                    WHERE film_id IN (
+                        SELECT film_id
+                        FROM films_likes
+                        WHERE user_id = ?)
+                    AND user_id != ?
+                    GROUP BY user_id
+                    ORDER BY COUNT(*) DESC
+                    LIMIT 1)
+            AND film_id NOT IN (
+                SELECT film_id
+                FROM films_likes
+                WHERE user_id = ?))
+            """;
 
     public Film save(Film film) {
         Long mpaId = film.getMpa() != null ? film.getMpa().getId() : null;
@@ -146,6 +166,12 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     public List<Film> findAll() {
         return findMany(FIND_ALL_FILM_QUERY).stream()
+                .map(this::getFilm)
+                .toList();
+    }
+
+    public List<Film> findRecommendationsFilms(Long userId) {
+        return jdbc.query(FIND_RECOMMENDATIONS_FILM_QUERY, mapper, userId, userId, userId).stream()
                 .map(this::getFilm)
                 .toList();
     }
@@ -215,7 +241,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     public List<Film> findCommonFilms(long userId, long friendId) {
-        return jdbc.query(FIND_COMMON_FILMS_SQL, filmRowMapper, userId, friendId)
+        return jdbc.query(FIND_COMMON_FILMS_SQL, mapper, userId, friendId)
                 .stream()
                 .map(this::getFilm)
                 .toList();

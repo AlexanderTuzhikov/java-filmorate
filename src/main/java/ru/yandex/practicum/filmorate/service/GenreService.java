@@ -20,7 +20,7 @@ public class GenreService {
     public List<GenreDto> getAllGenre() {
         return genreRepository.findAllGenre().stream()
                 .map(GenreMapper::mapToGenreDto)
-                .sorted(Comparator.comparing(GenreDto::getId)) // Сделал вывод по возрастанию как требуют тесты
+                .sorted(Comparator.comparing(GenreDto::getId))
                 .toList();
     }
 

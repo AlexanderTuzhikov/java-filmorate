@@ -20,7 +20,7 @@ public class MpaService {
     public List<MpaDto> getAllMpa() {
         return mpaRepository.findAllMpa().stream()
                 .map(MpaMapper::mapToMpaDto)
-                .sorted(Comparator.comparing(MpaDto::getId)) // Сделал вывод по возрастанию как требуют тесты
+                .sorted(Comparator.comparing(MpaDto::getId))
                 .toList();
     }
 

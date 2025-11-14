@@ -62,6 +62,10 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundFilm("Фильм с id=" + filmId + " не найден"));
     }
 
+    public void deleteFilm(Long filmId) {
+        filmRepository.delete(filmId);
+    }
+
     public void putLike(Long filmId, Long userId) {
         filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
         userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
