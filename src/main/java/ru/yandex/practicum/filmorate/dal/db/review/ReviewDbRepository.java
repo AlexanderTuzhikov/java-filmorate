@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal.db.review;
 
 import lombok.AllArgsConstructor;
+import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -17,41 +18,49 @@ import java.util.Optional;
 public class ReviewDbRepository {
     private final JdbcTemplate jdbc;
     private final ReviewRowMapper rowMapper;
-
+    @Language("SQL")
     private static final String INSERT_REVIEW = """
             INSERT INTO reviews (content, is_positive, user_id, film_id, useful)
             VALUES (?, ?, ?, ?, ?)
             """;
-
+    @Language("SQL")
     private static final String UPDATE_REVIEW = """
             UPDATE reviews SET content = ?, is_positive = ? WHERE review_id = ?
             """;
-
+    @Language("SQL")
     private static final String DELETE_REVIEW = "DELETE FROM reviews WHERE review_id = ?";
+    @Language("SQL")
     private static final String FIND_REVIEW_BY_ID = "SELECT * FROM reviews WHERE review_id = ?";
+    @Language("SQL")
     private static final String FIND_REVIEWS_BY_FILM = """
             SELECT * FROM reviews WHERE film_id = ? 
             ORDER BY useful DESC LIMIT ?
             """;
+    @Language("SQL")
     private static final String FIND_ALL_REVIEWS = "SELECT * FROM reviews ORDER BY useful DESC LIMIT ?";
-
+    @Language("SQL")
     private static final String CHECK_USER_REACTION = """
             SELECT rating FROM review_likes WHERE review_id = ? AND user_id = ?
             """;
+    @Language("SQL")
     private static final String INSERT_REACTION = """
             INSERT INTO review_likes (review_id, user_id, rating) VALUES (?, ?, ?)
             """;
+    @Language("SQL")
     private static final String UPDATE_REACTION = """
             UPDATE review_likes SET rating = ? WHERE review_id = ? AND user_id = ?
             """;
+    @Language("SQL")
     private static final String DELETE_REACTION = """
             DELETE FROM review_likes WHERE review_id = ? AND user_id = ?
             """;
+    @Language("SQL")
     private static final String CALCULATE_USEFUL = """
             SELECT COALESCE(SUM(rating), 0) 
             FROM review_likes 
             WHERE review_id = ?
             """;
+    @Language("SQL")
     private static final String UPDATE_USEFUL = "UPDATE reviews SET useful = ? WHERE review_id = ?";
 
     public Review save(Review review) {
