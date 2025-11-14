@@ -72,4 +72,12 @@ public class FilmController {
         log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
         return ResponseEntity.ok().body(filmService.getFilmsPopular(count));
     }
+
+    @GetMapping("/common")
+    public ResponseEntity<List<FilmDto>> getCommonFilms(@RequestParam("userId") long userId,
+                                     @RequestParam("friendId") long friendId) {
+        log.info("Запрос на получение общих фильмов для пользователей {} и {}", userId, friendId);
+        List<FilmDto> common = filmService.getCommonFilms(userId, friendId);
+        return ResponseEntity.ok().body(common);
+    }
 }
