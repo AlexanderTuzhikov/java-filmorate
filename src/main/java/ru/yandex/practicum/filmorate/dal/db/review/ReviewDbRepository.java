@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.dal.db.review;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -13,11 +14,13 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 @AllArgsConstructor
 public class ReviewDbRepository {
     private final JdbcTemplate jdbc;
     private final ReviewRowMapper rowMapper;
+
     @Language("SQL")
     private static final String INSERT_REVIEW = """
             INSERT INTO reviews (content, is_positive, user_id, film_id, useful)
@@ -33,7 +36,7 @@ public class ReviewDbRepository {
     private static final String FIND_REVIEW_BY_ID = "SELECT * FROM reviews WHERE review_id = ?";
     @Language("SQL")
     private static final String FIND_REVIEWS_BY_FILM = """
-            SELECT * FROM reviews WHERE film_id = ? 
+            SELECT * FROM reviews WHERE film_id = ?
             ORDER BY useful DESC LIMIT ?
             """;
     @Language("SQL")
@@ -56,8 +59,8 @@ public class ReviewDbRepository {
             """;
     @Language("SQL")
     private static final String CALCULATE_USEFUL = """
-            SELECT COALESCE(SUM(rating), 0) 
-            FROM review_likes 
+            SELECT COALESCE(SUM(rating), 0)
+            FROM review_likes
             WHERE review_id = ?
             """;
     @Language("SQL")
@@ -154,6 +157,7 @@ public class ReviewDbRepository {
                 updateUseful(reviewId);
             }
         } catch (Exception e) {
+            log.debug("Ошибка при удалении лайка: {}", e.getMessage());
         }
     }
 
@@ -166,6 +170,7 @@ public class ReviewDbRepository {
                 updateUseful(reviewId);
             }
         } catch (Exception e) {
+            log.debug("Ошибка при удалении дизлайка: {}", e.getMessage());
         }
     }
 
