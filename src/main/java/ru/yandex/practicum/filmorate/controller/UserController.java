@@ -46,6 +46,13 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getUser(userId));
     }
 
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable("userId") Long userId) {
+        log.info("Получен запрос на удаление пользователя  id={}", userId);
+        userService.deleteUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/{userId}/friends/{friendId}")
     public ResponseEntity<Void> putFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
         log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", userId, friendId);

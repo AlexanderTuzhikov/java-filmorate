@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS films_likes;
 DROP TABLE IF EXISTS film_genres;
 DROP TABLE IF EXISTS users_friends;
 DROP TABLE IF EXISTS films;
+DROP TABLE IF EXISTS feed_events;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS friendship_status;
 DROP TABLE IF EXISTS genres;
@@ -9,13 +10,13 @@ DROP TABLE IF EXISTS mpa;
 
 CREATE TABLE mpa
 (
-    id  INT PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(20) UNIQUE
 );
 
 CREATE TABLE genres
 (
-    id    INT PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) UNIQUE
 );
 
@@ -26,7 +27,7 @@ CREATE TABLE films
     description  VARCHAR(200) NOT NULL,
     release_date DATE         NOT NULL,
     duration     INT          NOT NULL CHECK (duration > 0),
-    mpa_id      INT,
+    mpa_id       INT,
     FOREIGN KEY (mpa_id) REFERENCES mpa (id)
 );
 
@@ -41,7 +42,7 @@ CREATE TABLE users
 
 CREATE TABLE friendship_status
 (
-    id     INT AUTO_INCREMENT PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(20) UNIQUE
 );
 
@@ -71,6 +72,17 @@ CREATE TABLE films_likes
     user_id INT,
     PRIMARY KEY (film_id, user_id),
     FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE feed_events
+(
+    id        INT AUTO_INCREMENT PRIMARY KEY,
+    user_id   INT,
+    entity_id INT,
+    event_type VARCHAR(20),
+    operation VARCHAR(20),
+    timestamp BIGINT,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 

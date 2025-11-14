@@ -98,6 +98,10 @@ public class UserService {
         friendshipRepository.delete(userId, friendId);
     }
 
+    public void deleteUser(Long userId) {
+        userRepository.delete(userId);
+    }
+
     public List<UserDto> getFriends(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
