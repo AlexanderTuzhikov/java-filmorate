@@ -1,25 +1,19 @@
 package ru.yandex.practicum.filmorate.dal.db.review;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.model.Review;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Repository
-@AllArgsConstructor
-public class ReviewDbRepository {
-    private final JdbcTemplate jdbc;
-    private final ReviewRowMapper rowMapper;
+public class ReviewDbRepository extends BaseDbRepositoryImpl<Review> {
 
     @Language("SQL")
     private static final String INSERT_REVIEW = """
@@ -66,48 +60,46 @@ public class ReviewDbRepository {
     @Language("SQL")
     private static final String UPDATE_USEFUL = "UPDATE reviews SET useful = ? WHERE review_id = ?";
 
+    public ReviewDbRepository(JdbcTemplate jdbc, RowMapper<Review> mapper) {
+        super(jdbc, mapper);
+    }
+
     public Review save(Review review) {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        Long id = insert(INSERT_REVIEW,
+                review.getContent(),
+                review.getIsPositive(),
+                review.getUserId(),
+                review.getFilmId(),
+                review.getUseful());
 
-        jdbc.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(INSERT_REVIEW, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, review.getContent());
-            ps.setBoolean(2, review.getIsPositive());
-            ps.setLong(3, review.getUserId());
-            ps.setLong(4, review.getFilmId());
-            ps.setInt(5, review.getUseful());
-            return ps;
-        }, keyHolder);
-
-        Long id = keyHolder.getKey().longValue();
         return getById(id).orElseThrow();
     }
 
     public Review update(Review review) {
-        jdbc.update(UPDATE_REVIEW,
+        update(UPDATE_REVIEW,
                 review.getContent(),
                 review.getIsPositive(),
                 review.getReviewId());
+
         updateUseful(review.getReviewId());
         return getById(review.getReviewId()).orElseThrow();
     }
 
     public void delete(Long reviewId) {
         jdbc.update("DELETE FROM review_likes WHERE review_id = ?", reviewId);
-        jdbc.update(DELETE_REVIEW, reviewId);
+        delete(DELETE_REVIEW, reviewId);
     }
 
     public Optional<Review> getById(Long reviewId) {
-        List<Review> reviews = jdbc.query(FIND_REVIEW_BY_ID, rowMapper, reviewId);
-        return reviews.stream().findFirst();
+        return findOne(FIND_REVIEW_BY_ID, reviewId);
     }
 
     public List<Review> getByFilmId(Long filmId, int count) {
-        return jdbc.query(FIND_REVIEWS_BY_FILM, rowMapper, filmId, count);
+        return findMany(FIND_REVIEWS_BY_FILM, filmId, count);
     }
 
     public List<Review> getAll(int count) {
-        return jdbc.query(FIND_ALL_REVIEWS, rowMapper, count);
+        return findMany(FIND_ALL_REVIEWS, count);
     }
 
     public void addLike(Long reviewId, Long userId) {
