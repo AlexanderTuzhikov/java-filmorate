@@ -80,22 +80,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             WHERE film_id = ? AND genre_id = ?;
             """;
     @Language("SQL")
-    private static final String INSERT_DIRECTOR_TO_FILM_QUERY = """
-            INSERT INTO film_directors (film_id, director_id)
-            VALUES (?, ?)
-            """;
-    @Language("SQL")
-    private static final String FIND_ALL_FILM_DIRECTOR_ID_QUERY = """
-            SELECT director_id
-            FROM film_directors
-            WHERE film_id = ?
-            """;
-    @Language("SQL")
-    private static final String DELETE_FILM_DIRECTOR_QUERY = """
-            DELETE FROM film_directors
-            WHERE film_id = ? AND director_id = ?;
-            """;
-    @Language("SQL")
     private static final String SORT_FILMS_BY_YEAR_QUERY = """
             SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
             FROM films AS f
@@ -129,7 +113,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId);
         insertFilmGenres(id, film.getGenres());
-        saveFilmDirectors(film);
+        directorDbRepository.saveFilmDirectors(film);
 
         Optional<Film> savedFilm = findById(id);
 
@@ -153,7 +137,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 film.getDuration(), mpaId, film.getId());
 
         updateFilmGenres(film.getId(), film.getGenres());
-        updateFilmDirectors(film);
+        directorDbRepository.updateFilmDirectors(film);
 
         Optional<Film> updateFilm = findById(film.getId());
 
@@ -243,43 +227,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     private @NotNull List<Long> findFilmGenresId(Long filmId) {
         return jdbc.queryForList(FIND_ALL_FILM_GENRE_ID_QUERY, Long.class, filmId);
-    }
-
-    private void insertFilmDirectors(Long filmId, Set<Director> directors) {
-        if (directors == null || directors.isEmpty()) return;
-
-        for (Director director : directors) {
-            Long directorId = director.getId();
-            directorDbRepository.findDirector(directorId)
-                    .orElseThrow(() -> new NotFoundGenre("Режиссёр не найден: id=" + directorId));
-        }
-
-        for (Director director : directors) {
-            jdbc.update(INSERT_DIRECTOR_TO_FILM_QUERY, filmId, director.getId());
-        }
-    }
-
-    private void saveFilmDirectors(Film film) {
-        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
-            directorDbRepository.addDirectorsToFilm(film.getId(), film.getDirectors());
-        }
-    }
-
-    private void updateFilmDirectors(Film film) {
-        directorDbRepository.removeALLDirectors(film);
-        saveFilmDirectors(film);
-    }
-
-    private @NotNull List<Long> findFilmDirectorsId(Long filmId) {
-        return jdbc.queryForList(FIND_ALL_FILM_DIRECTOR_ID_QUERY, Long.class, filmId);
-    }
-
-    private void deleteFilmDirector(Long filmId, Long directorId) {
-        int rowsDeleted = jdbc.update(DELETE_FILM_DIRECTOR_QUERY, filmId, directorId);
-
-        if (rowsDeleted == 0) {
-            log.warn("Не удалось удалить режиссера directorId= {}, filmId= {}", directorId, filmId);
-        }
     }
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
