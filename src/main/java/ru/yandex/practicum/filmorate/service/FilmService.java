@@ -64,6 +64,10 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundFilm("Фильм с id=" + filmId + " не найден"));
     }
 
+    public void deleteFilm(Long filmId) {
+        filmRepository.delete(filmId);
+    }
+
     public void putLike(Long filmId, Long userId) {
         filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
         userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
@@ -88,5 +92,16 @@ public class FilmService {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
         return filmRepository.getSortedFilms(directorId, sortBy);
+  
+    public List<FilmDto> getCommonFilms(long userId, long friendId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
+        userRepository.findById(friendId)
+                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + friendId));
+
+        List<Film> films = filmRepository.findCommonFilms(userId, friendId);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }
