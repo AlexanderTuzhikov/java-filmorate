@@ -11,7 +11,9 @@ import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -95,26 +97,25 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             """;
     @Language("SQL")
     private static final String SORT_FILMS_BY_YEAR_QUERY = """
-                    SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
-                    FROM films AS f
-                    JOIN mpa AS m ON f.mpa_id = m.id
-                    WHERE f.id IN (SELECT fd.film_id
-                                   FROM film_directors AS fd
-                                   WHERE fd.director_id =?)
-                    ORDER BY release_date ASC NULLS LAST""";
+            SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+            FROM films AS f
+            JOIN mpa AS m ON f.mpa_id = m.id
+            WHERE f.id IN (SELECT fd.film_id
+                           FROM film_directors AS fd
+                           WHERE fd.director_id =?)
+            ORDER BY release_date ASC NULLS LAST""";
     @Language("SQL")
     private static final String SORT_FILMS_BY_LIKES_QUERY = """
-                    SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
-                    FROM films AS f
-                    JOIN mpa AS m ON f.mpa_id = m.id
-                    LEFT JOIN (SELECT COUNT(fl.user_id) AS likes,
-                               fl.film_id
-                               FROM film_likes AS fl
-                               GROUP BY fl.film_id) AS l ON f.id = l.film_id
-                    WHERE f.id IN (SELECT fd.film_id
-                                   FROM film_directors AS fd
-                                   WHERE fd.director_id = ?)
-                    ORDER BY l.likes DESC NULLS LAST""";
+            SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+            FROM films AS f
+            JOIN mpa AS m ON f.mpa_id = m.id
+            LEFT JOIN (SELECT COUNT(fl.user_id) AS likes, fl.film_id
+                       FROM films_likes fl
+                       GROUP BY fl.film_id) AS l ON f.id = l.film_id
+            WHERE f.id IN (SELECT fd.film_id
+                           FROM film_directors fd
+                           WHERE fd.director_id =?)
+            ORDER BY l.likes DESC NULLS LAST""";
 
 
     public Film save(Film film) {
@@ -128,7 +129,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId);
         insertFilmGenres(id, film.getGenres());
-        insertFilmDirectors(id, film.getDirectors());
+        saveFilmDirectors(film);
 
         Optional<Film> savedFilm = findById(id);
 
@@ -150,8 +151,9 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId, film.getId());
+
         updateFilmGenres(film.getId(), film.getGenres());
-        updateFilmDirectors(film.getId(), film.getDirectors());
+        updateFilmDirectors(film);
 
         Optional<Film> updateFilm = findById(film.getId());
 
@@ -255,27 +257,17 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         for (Director director : directors) {
             jdbc.update(INSERT_DIRECTOR_TO_FILM_QUERY, filmId, director.getId());
         }
-
     }
 
-    private void updateFilmDirectors(Long filmId, Set<Director> directors) {
-        if (directors == null || directors.isEmpty()) return;
-
-        for (Director director : directors) {
-            Long directorId = director.getId();
-            directorDbRepository.findDirector(directorId)
-                    .orElseThrow(() -> new NotFoundGenre("Режиссёр не найден: id=" + directorId));
+    private void saveFilmDirectors(Film film) {
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            directorDbRepository.addDirectorsToFilm(film.getId(), film.getDirectors());
         }
+    }
 
-        List<Long> existDirector = findFilmDirectorsId(filmId);
-
-        for (Long directorId : existDirector) {
-            deleteFilmDirector(filmId, directorId);
-        }
-
-        for (Director director : directors) {
-            jdbc.update(INSERT_DIRECTOR_TO_FILM_QUERY, filmId, director.getId());
-        }
+    private void updateFilmDirectors(Film film) {
+        directorDbRepository.removeALLDirectors(film);
+        saveFilmDirectors(film);
     }
 
     private @NotNull List<Long> findFilmDirectorsId(Long filmId) {
@@ -290,7 +282,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         }
     }
 
-    public Collection<Film> getSortedFilms(Long directorId, String sort) {
+    public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
         if (!directorDbRepository.containDirector(directorId)) {
             throw new NotFoundDirector("Режиссер с ID= " + directorId + " - не найден");
         }
@@ -300,12 +292,22 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             query = SORT_FILMS_BY_YEAR_QUERY;
         }
 
-        List<Film> films = findMany(query, directorId);
-        for (Film film : films) {
-            insertFilmGenres(film.getId(), new HashSet<>());
-            insertFilmDirectors(film.getId(), new HashSet<>());
+        List<FilmDto> films = findMany(query, directorId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+        for (FilmDto film : films) {
+            addGenresAndDirectorsToFilm(film);
+        }
+        return films;
+    }
+
+    private void addGenresAndDirectorsToFilm(FilmDto film) {
+        if (film != null) {
+            List<Genre> genres = genreRepository.findFilmGenre(film.getId());
+            genres.sort(Comparator.comparing(Genre::getId));
+            film.setGenres(new LinkedHashSet<>(genres));
+            film.setDirectors(new HashSet<>(directorDbRepository.findFilmDirector(film.getId())));
         }
 
-        return films;
     }
 }

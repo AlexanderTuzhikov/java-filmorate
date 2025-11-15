@@ -31,8 +31,7 @@ public class Film {
     private final Set<Long> likes = new HashSet<>();
     @Builder.Default
     private final Set<Genre> genres = new HashSet<>();
-    @Builder.Default
-    private final Set<Director> directors = new HashSet<>();
+    private final Set<Director> directors;
 
     @Deprecated
     public void addLike(User user) {

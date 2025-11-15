@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.util.Collection;
@@ -70,7 +68,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public ResponseEntity<Collection<Film>> getSortedFilms(
+    public ResponseEntity<Collection<FilmDto>> getSortedFilms(
             @PathVariable("directorId") Long directorId,
             @RequestParam(defaultValue = "year") String sortBy
     ) {

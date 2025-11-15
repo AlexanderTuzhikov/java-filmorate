@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +67,12 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
             WHERE film_id = ?
             """;
 
+    @Language("SQL")
+    private static final String INSERT_FILM_DIRECTORS_QUERY = """
+            INSERT INTO film_directors (film_id, director_id)
+            VALUES (?, ?)
+            """;
+
 
     public List<Director> findAllDirector() {
         return findMany(FIND_ALL_DIRECTOR_QUERY);
@@ -80,7 +87,6 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
     }
 
     public void addDirector(Director director) {
-
         long id = insert(INSERT_DIRECTOR_QUERY, director.getName());
         director.setId(id);
     }
@@ -93,13 +99,19 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
         delete(DELETE_DIRECTOR_QUERY, directorId);
     }
 
-    public void removeALLDirectors(Director director) {
-        delete(DELETE_ALL_DIRECTORS_QUERY, director.getId());
+    public void removeALLDirectors(Film film) {
+        delete(DELETE_ALL_DIRECTORS_QUERY, film.getId());
     }
 
     public boolean containDirector(Long directorId) {
         Optional<Director> director = findOne(FIND_DIRECTOR_QUERY, directorId);
         return director.isPresent();
+    }
+
+    public void addDirectorsToFilm(Long filmId, Set<Director> directors) {
+        jdbc.batchUpdate(INSERT_FILM_DIRECTORS_QUERY, directors.stream()
+                .map(director -> new Object[]{filmId, director.getId()})
+                .toList());
     }
 
 }

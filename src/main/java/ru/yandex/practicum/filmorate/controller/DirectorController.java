@@ -8,15 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
-import ru.yandex.practicum.filmorate.dto.film.FilmDto;
-import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
-import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.service.DirectorService;
 
 import java.util.Collection;
-import java.util.List;
 
 @Slf4j
 @RestController

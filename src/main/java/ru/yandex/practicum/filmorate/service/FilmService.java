@@ -83,10 +83,10 @@ public class FilmService {
                 .toList();
     }
 
-    public Collection<Film> getSortedFilms(Long directorId, String sortBy) {
+    public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
-          return filmRepository.getSortedFilms(directorId, sortBy);
+        return filmRepository.getSortedFilms(directorId, sortBy);
     }
 }
