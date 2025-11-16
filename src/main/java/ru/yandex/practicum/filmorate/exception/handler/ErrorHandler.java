@@ -15,7 +15,7 @@ import java.util.List;
 @RestControllerAdvice
 public class ErrorHandler {
 
-    @ExceptionHandler({NotFoundUser.class, NotFoundFilm.class, NotFoundMpa.class, NotFoundGenre.class, NotFoundException.class, NotFoundDirector.class})
+    @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(final @NotNull RuntimeException exception) {
         log.error("Запрос на несуществующий ресурс. Error: {}", exception.getMessage());

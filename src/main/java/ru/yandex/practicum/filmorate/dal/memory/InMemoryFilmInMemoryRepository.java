@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.*;
@@ -35,7 +35,7 @@ public class InMemoryFilmInMemoryRepository implements BaseInMemoryRepository<Fi
             saveFilm(film);
         } else {
             log.warn("Попытка обновить не существующий фильм с id={}", film.getId());
-            throw new NotFoundFilm("Фильм с id=" + film.getId() + " не найден");
+            throw new NotFoundException("Фильм с id=" + film.getId() + " не найден");
         }
 
         return films.get(film.getId());
@@ -47,7 +47,7 @@ public class InMemoryFilmInMemoryRepository implements BaseInMemoryRepository<Fi
             return films.get(id);
         } else {
             log.warn("Попытка получить не существующий фильм с id={}", id);
-            throw new NotFoundFilm("Фильм с id=" + id + " не найден");
+            throw new NotFoundException("Фильм с id=" + id + " не найден");
         }
     }
 
@@ -68,7 +68,7 @@ public class InMemoryFilmInMemoryRepository implements BaseInMemoryRepository<Fi
             films.remove(id);
         } else {
             log.warn("Попытка удалить не существующий фильм с id={}", id);
-            throw new NotFoundFilm("Фильм с id=" + id + " не найден");
+            throw new NotFoundException("Фильм с id=" + id + " не найден");
         }
     }
 

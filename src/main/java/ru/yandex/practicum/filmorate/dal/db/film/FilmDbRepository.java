@@ -15,6 +15,8 @@ import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -141,7 +143,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
@@ -164,7 +166,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
         update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
@@ -177,7 +179,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (updateFilm.isEmpty()) {
             log.warn("Ошибка обновления фильма filmId= {}. Фильм не найден", film.getId());
-            throw new NotFoundFilm("Ошибка после обновления — фильм не найден");
+            throw new NotFoundException("Ошибка после обновления — фильм не найден");
         }
 
         return updateFilm.get();
@@ -210,6 +212,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 .flatMap(mpaRepository::findMpa)
                 .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA не найден"));
         Set<Director> directors = Set.copyOf(directorDbRepository.findFilmDirector(film.getId()));
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));
 
         return Film.builder()
                 .id(film.getId())
@@ -229,7 +232,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         for (Genre genre : genres) {
             Long genreId = genre.getId();
             genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
+                    .orElseThrow(() -> new NotFoundException("Жанр не найден: id=" + genreId));
         }
 
         for (Genre genre : genres) {
@@ -243,7 +246,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         for (Genre genre : genres) {
             Long genreId = genre.getId();
             genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
+                    .orElseThrow(() -> new NotFoundException("Жанр не найден: id=" + genreId));
         }
 
         List<Long> existGenre = findFilmGenresId(filmId);

@@ -2,12 +2,16 @@ package ru.yandex.practicum.filmorate.service;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.db.event.EventDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.review.ReviewDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
-import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
+import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.review.NewReviewRequest;
 import ru.yandex.practicum.filmorate.dto.review.ReviewDto;
 import ru.yandex.practicum.filmorate.dto.review.UpdateReviewRequest;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.Review;
@@ -21,29 +25,30 @@ public class ReviewService {
     private final ReviewDbRepository reviewRepository;
     private final UserDbRepository userRepository;
     private final FilmDbRepository filmRepository;
+    private final EventDbRepository eventRepository;
 
     public ReviewDto postReview(NewReviewRequest request) {
-        userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + request.getUserId() + " не найден"));
-
-        filmRepository.findById(request.getFilmId())
-                .orElseThrow(() -> new NotFoundException("Фильм с id=" + request.getFilmId() + " не найден"));
+        checkUserExists(request.getUserId());
+        checkFilmExists(request.getFilmId());
 
         Review review = ReviewMapper.mapToReview(request);
         Review saved = reviewRepository.save(review);
+        saveEvent(saved.getUserId(), saved.getReviewId(), Operation.ADD);
         return ReviewMapper.mapToReviewDto(saved);
     }
 
     public ReviewDto putReview(UpdateReviewRequest request) {
-        checkReviewExists(request.getReviewId());
         Review review = reviewRepository.getById(request.getReviewId())
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + request.getReviewId() + " не найден"));
         Review updated = ReviewMapper.updateReviewFields(review, request);
+        saveEvent(review.getUserId(), review.getReviewId(), Operation.UPDATE);
         return ReviewMapper.mapToReviewDto(reviewRepository.update(updated));
     }
 
     public void deleteReview(Long reviewId) {
-        checkReviewExists(reviewId);
+        Review review = reviewRepository.getById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
+        saveEvent(review.getUserId(), review.getReviewId(), Operation.REMOVE);
         reviewRepository.delete(reviewId);
     }
 
@@ -92,6 +97,17 @@ public class ReviewService {
         checkReviewExists(reviewId);
         checkUserExists(userId);
         reviewRepository.removeDislike(reviewId, userId);
+    }
+
+    private void saveEvent(Long userId, Long entityId, Operation operation) {
+        NewEventRequest newEvent = NewEventRequest.builder()
+                .userId(userId)
+                .entityId(entityId)
+                .eventType(EventType.REVIEW)
+                .operation(operation)
+                .build();
+
+        eventRepository.save(newEvent);
     }
 
     private void checkUserExists(Long userId) {
