@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.Assert;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
@@ -27,8 +29,8 @@ import java.util.Objects;
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({LikeDbRepository.class, FilmDbRepository.class, GenreDbRepository.class, MpaDbRepository.class,
-        FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
-        UserDbRepository.class, UserRowMapper.class})
+        DirectorDbRepository.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
+        DirectorRowMapper.class, UserDbRepository.class, UserRowMapper.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LikeDbRepositoryTest {
     private final LikeDbRepository likeRepository;
