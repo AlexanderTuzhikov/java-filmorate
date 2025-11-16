@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
@@ -90,6 +91,14 @@ public class FilmController {
             List<FilmDto> popularFilms = filmService.getFilmsPopular(count);
             return ResponseEntity.ok().body(popularFilms);
         }
+    }
+
+    @GetMapping("/director/{directorId}")
+    public ResponseEntity<Collection<FilmDto>> getSortedFilms(
+            @PathVariable("directorId") Long directorId,
+            @RequestParam(defaultValue = "year") String sortBy
+    ) {
+        return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
     }
 
     @GetMapping("/common")

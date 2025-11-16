@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.dto.mpa.MpaDto;
-import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.MpaMapper;
 
 import java.util.Comparator;
@@ -26,6 +26,6 @@ public class MpaService {
 
     public MpaDto getMpa(Long mapId) {
         return mpaRepository.findMpa(mapId).map(MpaMapper::mapToMpaDto)
-                .orElseThrow(() -> new NotFoundMpa("Mpa с id=" + mapId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Mpa с id=" + mapId + " не найден"));
     }
 }

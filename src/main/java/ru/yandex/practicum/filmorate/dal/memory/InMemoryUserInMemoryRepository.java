@@ -3,7 +3,7 @@ package ru.yandex.practicum.filmorate.dal.memory;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
@@ -33,7 +33,7 @@ public class InMemoryUserInMemoryRepository implements BaseInMemoryRepository<Us
             log.info("Обновлен пользователь: {}", user);
         } else {
             log.warn("Попытка обновить не существующего пользователя с id={}", user.getId());
-            throw new NotFoundUser("Пользователь с id=" + user.getId() + " не найден");
+            throw new NotFoundException("Пользователь с id=" + user.getId() + " не найден");
         }
         saveUser(user);
         return users.get(user.getId());
@@ -45,7 +45,7 @@ public class InMemoryUserInMemoryRepository implements BaseInMemoryRepository<Us
             return users.get(id);
         } else {
             log.warn("Попытка получить не существующего пользователя с id={}", id);
-            throw new NotFoundUser("Пользователь с id=" + id + " не найден");
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
         }
     }
 
@@ -66,7 +66,7 @@ public class InMemoryUserInMemoryRepository implements BaseInMemoryRepository<Us
             users.remove(id);
         } else {
             log.warn("Попытка удалить не существующего пользователя с id={}", id);
-            throw new NotFoundUser("Пользователь с id=" + id + " не найден");
+            throw new NotFoundException("Пользователь с id=" + id + " не найден");
         }
     }
 

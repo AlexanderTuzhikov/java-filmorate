@@ -8,20 +8,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
-import ru.yandex.practicum.filmorate.exception.NotFoundGenre;
-import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 @Qualifier
@@ -29,12 +30,14 @@ import java.util.Set;
 public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private final GenreDbRepository genreRepository;
     private final MpaDbRepository mpaRepository;
+    private final DirectorDbRepository directorDbRepository;
 
     public FilmDbRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreDbRepository genreRepository,
-                            MpaDbRepository mpaRepository) {
+                            MpaDbRepository mpaRepository, DirectorDbRepository directorDbRepository) {
         super(jdbc, mapper);
         this.genreRepository = genreRepository;
         this.mpaRepository = mpaRepository;
+        this.directorDbRepository = directorDbRepository;
     }
 
     @Language("SQL")
@@ -79,6 +82,27 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             WHERE film_id = ? AND genre_id = ?;
             """;
     @Language("SQL")
+    private static final String SORT_FILMS_BY_YEAR_QUERY = """
+            SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+            FROM films AS f
+            JOIN mpa AS m ON f.mpa_id = m.id
+            WHERE f.id IN (SELECT fd.film_id
+                           FROM film_directors AS fd
+                           WHERE fd.director_id =?)
+            ORDER BY release_date ASC NULLS LAST""";
+    @Language("SQL")
+    private static final String SORT_FILMS_BY_LIKES_QUERY = """
+            SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
+            FROM films AS f
+            JOIN mpa AS m ON f.mpa_id = m.id
+            LEFT JOIN (SELECT COUNT(fl.user_id) AS likes, fl.film_id
+                       FROM films_likes fl
+                       GROUP BY fl.film_id) AS l ON f.id = l.film_id
+            WHERE f.id IN (SELECT fd.film_id
+                           FROM film_directors fd
+                           WHERE fd.director_id =?)
+            ORDER BY l.likes DESC NULLS LAST""";
+
     private static final String FIND_COMMON_FILMS_SQL = """
             SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
             FROM films f
@@ -134,12 +158,14 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId);
         insertFilmGenres(id, film.getGenres());
+        directorDbRepository.saveFilmDirectors(film);
+
         Optional<Film> savedFilm = findById(id);
 
         if (savedFilm.isEmpty()) {
@@ -155,17 +181,20 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
         update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId, film.getId());
+
         updateFilmGenres(film.getId(), film.getGenres());
+        directorDbRepository.updateFilmDirectors(film);
+
         Optional<Film> updateFilm = findById(film.getId());
 
         if (updateFilm.isEmpty()) {
             log.warn("Ошибка обновления фильма filmId= {}. Фильм не найден", film.getId());
-            throw new NotFoundFilm("Ошибка после обновления — фильм не найден");
+            throw new NotFoundException("Ошибка после обновления — фильм не найден");
         }
 
         return updateFilm.get();
@@ -197,6 +226,8 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 .map(Mpa::getId)
                 .flatMap(mpaRepository::findMpa)
                 .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA не найден"));
+        Set<Director> directors = Set.copyOf(directorDbRepository.findFilmDirector(film.getId()));
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));
 
         return Film.builder()
                 .id(film.getId())
@@ -206,6 +237,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 .duration(film.getDuration())
                 .mpa(mpa)
                 .genres(genres)
+                .directors(directors)
                 .build();
     }
 
@@ -215,7 +247,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         for (Genre genre : genres) {
             Long genreId = genre.getId();
             genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
+                    .orElseThrow(() -> new NotFoundException("Жанр не найден: id=" + genreId));
         }
 
         for (Genre genre : genres) {
@@ -229,7 +261,7 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         for (Genre genre : genres) {
             Long genreId = genre.getId();
             genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
+                    .orElseThrow(() -> new NotFoundException("Жанр не найден: id=" + genreId));
         }
 
         List<Long> existGenre = findFilmGenresId(filmId);
@@ -253,6 +285,34 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     private @NotNull List<Long> findFilmGenresId(Long filmId) {
         return jdbc.queryForList(FIND_ALL_FILM_GENRE_ID_QUERY, Long.class, filmId);
+    }
+
+    public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
+        if (!directorDbRepository.containDirector(directorId)) {
+            throw new NotFoundDirector("Режиссер с ID= " + directorId + " - не найден");
+        }
+
+        String query = SORT_FILMS_BY_LIKES_QUERY;
+        if (sort.equals("year")) {
+            query = SORT_FILMS_BY_YEAR_QUERY;
+        }
+
+        List<FilmDto> films = findMany(query, directorId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+        for (FilmDto film : films) {
+            addGenresAndDirectorsToFilm(film);
+        }
+        return films;
+    }
+
+    private void addGenresAndDirectorsToFilm(FilmDto film) {
+        if (film != null) {
+            List<Genre> genres = genreRepository.findFilmGenre(film.getId());
+            genres.sort(Comparator.comparing(Genre::getId));
+            film.setGenres(new LinkedHashSet<>(genres));
+            film.setDirectors(new HashSet<>(directorDbRepository.findFilmDirector(film.getId())));
+        }
     }
 
     public List<Film> findCommonFilms(long userId, long friendId) {

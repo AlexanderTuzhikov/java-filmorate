@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
-import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.GenreMapper;
 
 import java.util.Comparator;
@@ -26,6 +26,6 @@ public class GenreService {
 
     public GenreDto getGenre(Long genreId) {
         return genreRepository.findGenre(genreId).map(GenreMapper::mapToGenreDto)
-                .orElseThrow(() -> new NotFoundMpa("Genre с id=" + genreId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Genre с id=" + genreId + " не найден"));
     }
 }
