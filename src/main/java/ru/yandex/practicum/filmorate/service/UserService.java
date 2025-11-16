@@ -17,7 +17,7 @@ import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.EventMapper;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
@@ -50,7 +50,7 @@ public class UserService {
 
         if (findUser.isEmpty()) {
             log.warn("Пользователь userId= {} для обновления не найден", request.getId());
-            throw new NotFoundUser("Пользователь для обновления не найден");
+            throw new NotFoundException("Пользователь для обновления не найден");
         }
 
         User user = updateUserFields(findUser.get(), request);
@@ -63,7 +63,7 @@ public class UserService {
     public UserDto getUser(Long id) {
         return userRepository.findById(id)
                 .map(UserMapper::mapToUserDto)
-                .orElseThrow(() -> new NotFoundUser("Пользователь с id=" + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
     }
 
     public List<UserDto> getUsers() {
@@ -78,7 +78,7 @@ public class UserService {
 
         if (user.isEmpty() || friend.isEmpty()) {
             log.warn("Попытка создать дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundUser("Пользователи для добавления в дружбу не найдены");
+            throw new NotFoundException("Пользователи для добавления в дружбу не найдены");
         }
 
         boolean status = friendshipRepository.save(userId, friendId);
@@ -101,7 +101,7 @@ public class UserService {
 
         if (user.isEmpty() || friend.isEmpty()) {
             log.warn("Попытка удалить дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundUser("Пользователи для удаления дружбы не найдены");
+            throw new NotFoundException("Пользователи для удаления дружбы не найдены");
         }
 
         friendshipRepository.delete(userId, friendId);
@@ -117,7 +117,7 @@ public class UserService {
 
         if (user.isEmpty()) {
             log.warn("Попытка получить друзей не существующего пользователя userId= {}", userId);
-            throw new NotFoundUser("Пользователь не найден");
+            throw new NotFoundException("Пользователь не найден");
         }
 
         return friendshipRepository.findAllFriends(userId).stream()
@@ -131,7 +131,7 @@ public class UserService {
 
         if (user.isEmpty() || friend.isEmpty()) {
             log.warn("Попытка запроса общих друзей для не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundUser("Пользователи для запроса общих друзей не найдены");
+            throw new NotFoundException("Пользователи для запроса общих друзей не найдены");
         }
 
         return friendshipRepository.findCommonFriends(userId, friendId).stream()

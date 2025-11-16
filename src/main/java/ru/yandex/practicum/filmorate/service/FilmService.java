@@ -14,8 +14,7 @@ import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
-import ru.yandex.practicum.filmorate.exception.NotFoundUser;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -46,7 +45,7 @@ public class FilmService {
 
         if (findFilm.isEmpty()) {
             log.warn("Фильм userId= {} для обновления не найден", request.getId());
-            throw new NotFoundFilm("Фильм для обновления не найден");
+            throw new NotFoundException("Фильм для обновления не найден");
         }
 
         Film film = updateFilmFields(findFilm.get(), request);
@@ -64,7 +63,7 @@ public class FilmService {
     public FilmDto getFilm(Long filmId) {
         return filmRepository.findById(filmId)
                 .map(FilmMapper::mapToFilmDto)
-                .orElseThrow(() -> new NotFoundFilm("Фильм с id=" + filmId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 
     public void deleteFilm(Long filmId) {
@@ -72,15 +71,15 @@ public class FilmService {
     }
 
     public void putLike(Long filmId, Long userId) {
-        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
+        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден: id=" + filmId));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
         likeRepository.save(filmId, userId);
         saveEvent(userId, filmId, Operation.ADD);
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundFilm("Фильм не найден: id=" + filmId));
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
+        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден: id=" + filmId));
+        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
         likeRepository.delete(filmId, userId);
         saveEvent(userId, filmId, Operation.REMOVE);
     }
@@ -94,9 +93,9 @@ public class FilmService {
 
     public List<FilmDto> getCommonFilms(long userId, long friendId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
         userRepository.findById(friendId)
-                .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + friendId));
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + friendId));
 
         List<Film> films = filmRepository.findCommonFilms(userId, friendId);
         return films.stream()
