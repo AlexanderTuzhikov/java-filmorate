@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.event.EventDto;
+import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
@@ -46,6 +47,13 @@ public class UserController {
         return ResponseEntity.ok().body(userService.getUser(userId));
     }
 
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> deleteFilm(@PathVariable("userId") Long userId) {
+        log.info("Получен запрос на удаление пользователя  id={}", userId);
+        userService.deleteUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
     @PutMapping("/{userId}/friends/{friendId}")
     public ResponseEntity<Void> putFriend(@PathVariable("userId") Long userId, @PathVariable("friendId") Long friendId) {
         log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", userId, friendId);
@@ -82,5 +90,11 @@ public class UserController {
     public ResponseEntity<List<EventDto>> getAllEvents() {
         log.info("Получен запрос на получение ленты событий");
         return ResponseEntity.ok().body(userService.getAllEvents());
+    }
+
+    @GetMapping("/{userId}/recommendations")
+    public ResponseEntity<List<FilmDto>> getRecommendations(@PathVariable("userId") Long userId) {
+        log.info("Получен запрос на получение рекомендованных фильмов от id={} ", userId);
+        return ResponseEntity.ok().body(userService.getRecommendations(userId));
     }
 }

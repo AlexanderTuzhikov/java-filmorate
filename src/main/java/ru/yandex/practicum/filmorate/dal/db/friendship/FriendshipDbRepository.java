@@ -60,10 +60,15 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
 
     public boolean save(Long userId, Long friendId) {
         boolean duplicate = isDuplicate(userId, friendId);
+        boolean updateStatus = isUpdateStatus(userId, friendId);
 
         if (duplicate) {
             log.warn("Дружба уже существует, новая запись не может быть добавлена");
             throw new ValidationException("Попытка добавить дубликат дружбы");
+        }
+
+        if (updateStatus) {
+            return update(userId, friendId, FriendshipStatus.CONFIRMED);
         }
 
         Optional<Long> statusIdConfirmed = getFriendStatusId(FriendshipStatus.CONFIRMED);
@@ -121,10 +126,28 @@ public class FriendshipDbRepository extends BaseDbRepositoryImpl<User> {
 
     private boolean isDuplicate(Long userId, Long friendId) {
         @Language("SQL")
-        String sql = "SELECT COUNT(*) FROM users_friends WHERE (user_id = ? AND friend_id = ?) " +
-                "OR (user_id = ? AND friend_id = ?)";
+        String sql = """
+                SELECT COUNT(*)
+                FROM users_friends AS uf
+                JOIN friendship_status AS fs ON uf.friendship_status_id = fs.id
+                        WHERE (user_id = ? AND friend_id = ? AND name = 'CONFIRMED')
+                """;
 
-        Integer rowDuplicate = jdbc.queryForObject(sql, Integer.class, userId, friendId, friendId, userId);
+        Integer rowDuplicate = jdbc.queryForObject(sql, Integer.class, userId, friendId);
+
+        return rowDuplicate != null && rowDuplicate > 0;
+    }
+
+    private boolean isUpdateStatus(Long userId, Long friendId) {
+        @Language("SQL")
+        String sql = """
+                SELECT COUNT(*)
+                FROM users_friends AS uf
+                JOIN friendship_status AS fs ON uf.friendship_status_id = fs.id
+                        WHERE (user_id = ? AND friend_id = ? AND name = 'NOT_CONFIRMED')
+                """;
+
+        Integer rowDuplicate = jdbc.queryForObject(sql, Integer.class, userId, friendId);
 
         return rowDuplicate != null && rowDuplicate > 0;
     }
