@@ -27,6 +27,7 @@ public final class FilmMapper {
                 .duration(request.getDuration())
                 .mpa(request.getMpa())
                 .genres(request.getGenres())
+                .directors(request.getDirectors())
                 .build();
     }
 
@@ -41,6 +42,7 @@ public final class FilmMapper {
                 .genres(film.getGenres().stream()
                         .sorted(Comparator.comparing(Genre::getId))
                         .collect(Collectors.toCollection(LinkedHashSet::new)))
+                .directors(film.getDirectors())
                 .build();
     }
 
@@ -75,6 +77,10 @@ public final class FilmMapper {
 
         if (!request.hasGenres()) {
             builder.genres(request.getGenres());
+        }
+
+        if (request.hasDirectors()) {
+            builder.directors(request.getDirectors());
         }
 
         return builder.build();
