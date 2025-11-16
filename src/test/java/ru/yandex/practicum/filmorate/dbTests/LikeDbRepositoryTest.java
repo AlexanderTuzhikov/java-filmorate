@@ -22,7 +22,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
-import java.util.Objects;
 
 @JdbcTest
 @AutoConfigureTestDatabase
