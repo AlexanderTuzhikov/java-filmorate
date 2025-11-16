@@ -12,11 +12,11 @@ import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
-import ru.yandex.practicum.filmorate.exception.*;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundDirector;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -225,9 +225,8 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         Mpa mpa = Optional.ofNullable(film.getMpa())
                 .map(Mpa::getId)
                 .flatMap(mpaRepository::findMpa)
-                .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA не найден"));
-        Set<Director> directors = Set.copyOf(directorDbRepository.findFilmDirector(film.getId()));
                 .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));
+        Set<Director> directors = Set.copyOf(directorDbRepository.findFilmDirector(film.getId()));
 
         return Film.builder()
                 .id(film.getId())
