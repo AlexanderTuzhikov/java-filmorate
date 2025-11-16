@@ -48,4 +48,5 @@ public class GenreDbRepository extends BaseDbRepositoryImpl<Genre> {
     public List<Genre> findFilmGenre(Long filmId) {
         return jdbc.query(FIND_FILM_GENRE_QUERY, mapper, filmId);
     }
+
 }

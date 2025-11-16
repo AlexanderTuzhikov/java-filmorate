@@ -68,14 +68,33 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<List<FilmDto>> getFilmsPopular(@RequestParam(name = "count", required = false, defaultValue = "10") int count) {
-        log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
-        return ResponseEntity.ok().body(filmService.getFilmsPopular(count));
+    public ResponseEntity<List<FilmDto>> getFilmsPopular(@RequestParam(name = "count", required = false, defaultValue = "10") int count,
+                                                         @RequestParam(name = "genreId", required = false) Long genreId,
+                                                         @RequestParam(name = "year", required = false) Integer year) {
+
+        if (genreId != null && year != null) {
+            log.info("Получен запрос на получение списка из count={} популярных фильмов genreId={} за {} год",
+                    count, genreId, year);
+            List<FilmDto> popularFilms = filmService.getFilmsPopularByGenreIdAndYear(count, genreId, year);
+            return ResponseEntity.ok().body(popularFilms);
+        } else if (genreId != null) {
+            log.info("Получен запрос на получение списка из count={} популярных фильмов по жанру {}", count, genreId);
+            List<FilmDto> popularFilmsByGenre = filmService.getFilmsPopularByGenreId(count, genreId);
+            return ResponseEntity.ok().body(popularFilmsByGenre);
+        } else if (year != null) {
+            log.info("Получен запрос на получения списка из count={} популярных фильмов за {} год", count, year);
+            List<FilmDto> popularsFilmsByYear = filmService.getFilmsPopularByYear(count, year);
+            return ResponseEntity.ok().body(popularsFilmsByYear);
+        } else {
+            log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
+            List<FilmDto> popularFilms = filmService.getFilmsPopular(count);
+            return ResponseEntity.ok().body(popularFilms);
+        }
     }
 
     @GetMapping("/common")
     public ResponseEntity<List<FilmDto>> getCommonFilms(@RequestParam("userId") long userId,
-                                     @RequestParam("friendId") long friendId) {
+                                                        @RequestParam("friendId") long friendId) {
         log.info("Запрос на получение общих фильмов для пользователей {} и {}", userId, friendId);
         List<FilmDto> common = filmService.getCommonFilms(userId, friendId);
         return ResponseEntity.ok().body(common);

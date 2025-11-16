@@ -80,17 +80,18 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             """;
     @Language("SQL")
     private static final String FIND_COMMON_FILMS_SQL = """
-        SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
-        FROM films f
-        JOIN films_likes fl1 ON f.id = fl1.film_id AND fl1.user_id = ?
-        JOIN films_likes fl2 ON f.id = fl2.film_id AND fl2.user_id = ?
-        LEFT JOIN (
-            SELECT film_id, COUNT(*) AS likes_count
-            FROM films_likes
-            GROUP BY film_id
-        ) l ON f.id = l.film_id
-        ORDER BY l.likes_count DESC
-        """;
+            SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
+            FROM films f
+            JOIN films_likes fl1 ON f.id = fl1.film_id AND fl1.user_id = ?
+            JOIN films_likes fl2 ON f.id = fl2.film_id AND fl2.user_id = ?
+            LEFT JOIN (
+                SELECT film_id, COUNT(*) AS likes_count
+                FROM films_likes
+                GROUP BY film_id
+            ) l ON f.id = l.film_id
+            ORDER BY l.likes_count DESC
+            """;
+
     private static final String FIND_RECOMMENDATIONS_FILM_QUERY = """
             SELECT *
             FROM films
@@ -112,6 +113,20 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 SELECT film_id
                 FROM films_likes
                 WHERE user_id = ?))
+            """;
+
+    @Language("SQL")
+    private static final String FIND_FILMS_BY_YEAR_QUERY = """
+            SELECT f.id
+            FROM films f
+            WHERE EXTRACT(YEAR FROM f.release_date) = ?
+            """;
+
+    @Language("SQL")
+    private static final String FIND_ALL_FILMS_BY_GENRE_ID_QUERY = """
+            SELECT film_id
+            FROM film_genres
+            WHERE genre_id = ?
             """;
 
     public Film save(Film film) {
@@ -245,5 +260,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 .stream()
                 .map(this::getFilm)
                 .toList();
+    }
+
+    public List<Long> findFilmsByYear(Long year) {
+        return jdbc.queryForList(FIND_FILMS_BY_YEAR_QUERY, Long.class, year);
+    }
+
+    public List<Long> findAllFilmsByGenreId(Long genreId) {
+        return jdbc.queryForList(FIND_ALL_FILMS_BY_GENRE_ID_QUERY, Long.class, genreId);
     }
 }
