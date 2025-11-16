@@ -295,11 +295,12 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             film.setGenres(new LinkedHashSet<>(genres));
             film.setDirectors(new HashSet<>(directorDbRepository.findFilmDirector(film.getId())));
         }
-
-    public List<Film> findCommonFilms(long userId, long friendId) {
-        return jdbc.query(FIND_COMMON_FILMS_SQL, mapper, userId, friendId)
-                .stream()
-                .map(this::getFilm)
-                .toList();
     }
+
+        public List<Film> findCommonFilms ( long userId, long friendId){
+            return jdbc.query(FIND_COMMON_FILMS_SQL, mapper, userId, friendId)
+                    .stream()
+                    .map(this::getFilm)
+                    .toList();
+        }
 }
