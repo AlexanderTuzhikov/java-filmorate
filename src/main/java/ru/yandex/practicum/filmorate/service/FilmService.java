@@ -92,7 +92,8 @@ public class FilmService {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
         return filmRepository.getSortedFilms(directorId, sortBy);
-  
+    }
+
     public List<FilmDto> getCommonFilms(long userId, long friendId) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundUser("Пользователь не найден: id=" + userId));

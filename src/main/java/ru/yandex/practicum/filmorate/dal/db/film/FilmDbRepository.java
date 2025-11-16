@@ -297,10 +297,10 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         }
     }
 
-        public List<Film> findCommonFilms ( long userId, long friendId){
-            return jdbc.query(FIND_COMMON_FILMS_SQL, mapper, userId, friendId)
-                    .stream()
-                    .map(this::getFilm)
-                    .toList();
-        }
+    public List<Film> findCommonFilms(long userId, long friendId) {
+        return jdbc.query(FIND_COMMON_FILMS_SQL, mapper, userId, friendId)
+                .stream()
+                .map(this::getFilm)
+                .toList();
+    }
 }

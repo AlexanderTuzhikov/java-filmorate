@@ -80,6 +80,8 @@ public class FilmController {
             @RequestParam(defaultValue = "year") String sortBy
     ) {
         return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
+    }
+
     @GetMapping("/common")
     public ResponseEntity<List<FilmDto>> getCommonFilms(@RequestParam("userId") long userId,
                                      @RequestParam("friendId") long friendId) {
