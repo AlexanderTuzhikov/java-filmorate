@@ -121,7 +121,14 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
     }
 
     public void updateFilmDirectors(Film film) {
+        // log.info("updateFilmDirectors: filmId={}, directors={}", film.getId(), film.getDirectors());
+        if (film.getDirectors() == null) {
+            return;
+        }
         removeALLDirectors(film);
+        if (film.getDirectors().isEmpty()) {
+            return;
+        }
         saveFilmDirectors(film);
     }
 

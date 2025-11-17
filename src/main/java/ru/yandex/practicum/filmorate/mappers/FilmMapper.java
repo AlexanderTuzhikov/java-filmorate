@@ -57,11 +57,6 @@ public final class FilmMapper {
             builder.description(request.getDescription());
         }
 
-        if (request.hasReleaseDate()) {
-            builder.releaseDate(request.getReleaseDate());
-
-        }
-
         if (request.hasDuration()) {
             builder.duration(request.getDuration());
         }
@@ -75,7 +70,7 @@ public final class FilmMapper {
             builder.mpa(request.getMpa());
         }
 
-        if (!request.hasGenres()) {
+        if (request.hasGenres()) { //почему-то было с !
             builder.genres(request.getGenres());
         }
 

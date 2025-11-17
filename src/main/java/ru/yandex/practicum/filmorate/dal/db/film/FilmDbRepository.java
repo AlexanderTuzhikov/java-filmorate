@@ -220,6 +220,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             mpaRepository.findMpa(mpaId)
                     .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
+log.info("UPDATE filmId={}, genres from request = {}",
+        film.getId(), film.getGenres() == null ? "null" : film.getGenres().stream()
+                .map(g -> g.getId() + ":" + g.getName())
+                .toList()
+);
+        log.info("UPDATE filmId={}, directors from request = {}", film.getId(), film.getDirectors());
+// логирование
 
         update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId, film.getId());
@@ -258,6 +265,16 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     private Film getFilm(Film film) {
+
+        List<Director> directorsFromDb = directorDbRepository.findFilmDirector(film.getId());
+        log.info("getFilm: filmId={}, directors from DB = {}",
+                film.getId(),
+                directorsFromDb.stream()
+                        .map(d -> d.getId() + ":" + d.getName())
+                        .toList()
+        ); //логирование
+
+
         Set<Genre> genres = new HashSet<>(genreRepository.findFilmGenre(film.getId()));//Set.copyOf создает неизменяемые коллекции, заменила его
         Mpa mpa = Optional.ofNullable(film.getMpa())
                 .map(Mpa::getId)
@@ -293,7 +310,24 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     private void updateFilmGenres(Long filmId, Set<Genre> genres) {
-        if (genres == null || genres.isEmpty()) return;
+        /* логирование
+        log.info("update FilmGenres: filmId={}, genres arg = {}",
+                filmId,
+                genres == null ? "null" : genres.stream()
+                        .map(g -> g.getId() + ":" + g.getName())
+                        .toList()
+        );
+        */
+        if (genres == null) {
+            return;
+        }
+        List<Long> existGenre = findFilmGenresId(filmId);
+        for (Long genreId : existGenre) {
+            deleteFilmGenre(filmId, genreId);
+        }
+        if (genres.isEmpty()) {
+            return;
+        }
 
         for (Genre genre : genres) {
             Long genreId = genre.getId();
@@ -301,16 +335,14 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                     .orElseThrow(() -> new NotFoundException("Жанр не найден: id=" + genreId));
         }
 
-        List<Long> existGenre = findFilmGenresId(filmId);
-
-        for (Long genreId : existGenre) {
-            deleteFilmGenre(filmId, genreId);
-        }
-
         for (Genre genre : genres) {
             jdbc.update(INSERT_FILM_GENRE_QUERY, filmId, genre.getId());
         }
-    }
+        /*
+        List<Long> current = findFilmGenresId(filmId);
+        log.info("updateFilmGenres: after update filmId={} genres in BD = {}", filmId, current);
+        */
+    } 
 
     private void deleteFilmGenre(Long filmId, Long genreId) {
         int rowsDeleted = jdbc.update(DELETE_FILM_GENRE_QUERY, filmId, genreId);
