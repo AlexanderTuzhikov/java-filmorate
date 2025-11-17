@@ -24,6 +24,7 @@ import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -140,14 +141,17 @@ public class UserService {
     }
 
     public List<EventDto> getUserEvents(Long userId) {
+        checkUserExists(userId);
         return eventRepository.findUserEvents(userId).stream()
                 .map(EventMapper::mapEventDto)
+                .sorted(Comparator.comparing(EventDto::getTimestamp))
                 .toList();
     }
 
     public List<EventDto> getAllEvents() {
         return eventRepository.findAllEvents().stream()
                 .map(EventMapper::mapEventDto)
+                .sorted(Comparator.comparing(EventDto::getUserId))
                 .toList();
     }
 
@@ -166,5 +170,10 @@ public class UserService {
         return filmDbRepository.findRecommendationsFilms(userId).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    private void checkUserExists(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 }

@@ -48,5 +48,4 @@ public class DirectorController {
         directorService.removeDirectorById(directorId);
         return ResponseEntity.ok().build();
     }
-
 }

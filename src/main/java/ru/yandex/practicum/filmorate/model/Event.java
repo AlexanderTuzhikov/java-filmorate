@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.enums.Operation;
 @Data
 @Builder(toBuilder = true)
 public class Event {
-    private final Long id;
+    private final Long eventId;
     private final Long userId;
     private final Long entityId;
     private final EventType eventType;

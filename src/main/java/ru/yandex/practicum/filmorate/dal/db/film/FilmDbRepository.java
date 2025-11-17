@@ -12,11 +12,11 @@ import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundDirector;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Director;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -199,7 +199,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId);
         insertFilmGenres(id, film.getGenres());
-        //проставляем id фильму перед сохранением связки режиссеров
         film = film.toBuilder().id(id).build();
 
         directorDbRepository.saveFilmDirectors(film);
@@ -327,11 +326,11 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
         if (!directorDbRepository.containDirector(directorId)) {
-            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");
         }
 
         String query = SORT_FILMS_BY_LIKES_QUERY;
-        if ("year".equals(sort)) {      //защита от NPE, если вдруг sort == null
+        if ("year".equals(sort)) {
             query = SORT_FILMS_BY_YEAR_QUERY;
         }
 
@@ -350,14 +349,14 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             genres.sort(Comparator.comparing(Genre::getId));
             film.setGenres(new LinkedHashSet<>(genres));
             film.setDirectors(new HashSet<>(directorDbRepository.findFilmDirector(film.getId())));
-            // добавляем MPA
+
             if (film.getMpa() != null && film.getMpa().getId() != null) {
                 Mpa fullMpa = mpaRepository.findMpa(film.getMpa().getId()).orElse(null);
                 film.setMpa(fullMpa);
             }
         }
     }
-    //метод для реализации функционала ветки add-search
+
     public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
         String like = "%" + query.toLowerCase() + "%";
 

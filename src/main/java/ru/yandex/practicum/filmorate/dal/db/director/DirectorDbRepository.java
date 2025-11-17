@@ -78,7 +78,7 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
 
     public Optional<Director> findDirector(Long directorId) {
         if (!containDirector(directorId)) {
-            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");
         }
         return findOne(FIND_DIRECTOR_QUERY, directorId);
     }
@@ -94,7 +94,7 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
 
     public void removeDirector(Long directorId) {
         if (!containDirector(directorId)) {
-            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");
         }
         delete(DELETE_DIRECTOR_QUERY, directorId);
     }

@@ -33,7 +33,7 @@ public class ReviewService {
 
         Review review = ReviewMapper.mapToReview(request);
         Review saved = reviewRepository.save(review);
-        saveEvent(saved.getUserId(), saved.getReviewId(), Operation.ADD);
+        saveReviewEvent(saved.getUserId(), saved.getReviewId(), Operation.ADD);
         return ReviewMapper.mapToReviewDto(saved);
     }
 
@@ -41,14 +41,14 @@ public class ReviewService {
         Review review = reviewRepository.getById(request.getReviewId())
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + request.getReviewId() + " не найден"));
         Review updated = ReviewMapper.updateReviewFields(review, request);
-        saveEvent(review.getUserId(), review.getReviewId(), Operation.UPDATE);
+        saveReviewEvent(review.getUserId(), review.getReviewId(), Operation.UPDATE);
         return ReviewMapper.mapToReviewDto(reviewRepository.update(updated));
     }
 
     public void deleteReview(Long reviewId) {
         Review review = reviewRepository.getById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
-        saveEvent(review.getUserId(), review.getReviewId(), Operation.REMOVE);
+        saveReviewEvent(review.getUserId(), review.getReviewId(), Operation.REMOVE);
         reviewRepository.delete(reviewId);
     }
 
@@ -78,6 +78,7 @@ public class ReviewService {
     public void putLike(Long reviewId, Long userId) {
         checkReviewExists(reviewId);
         checkUserExists(userId);
+        saveReviewEvent(userId, reviewId, Operation.UPDATE);
         reviewRepository.addLike(reviewId, userId);
     }
 
@@ -90,6 +91,7 @@ public class ReviewService {
     public void deleteLike(Long reviewId, Long userId) {
         checkReviewExists(reviewId);
         checkUserExists(userId);
+        saveReviewEvent(userId, reviewId, Operation.REMOVE);
         reviewRepository.removeLike(reviewId, userId);
     }
 
@@ -99,11 +101,22 @@ public class ReviewService {
         reviewRepository.removeDislike(reviewId, userId);
     }
 
-    private void saveEvent(Long userId, Long entityId, Operation operation) {
+    private void saveReviewEvent(Long userId, Long entityId, Operation operation) {
         NewEventRequest newEvent = NewEventRequest.builder()
                 .userId(userId)
                 .entityId(entityId)
                 .eventType(EventType.REVIEW)
+                .operation(operation)
+                .build();
+
+        eventRepository.save(newEvent);
+    }
+
+    private void saveLikeEvent(Long userId, Long entityId, Operation operation) {
+        NewEventRequest newEvent = NewEventRequest.builder()
+                .userId(userId)
+                .entityId(entityId)
+                .eventType(EventType.LIKE)
                 .operation(operation)
                 .build();
 

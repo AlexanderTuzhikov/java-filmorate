@@ -30,10 +30,7 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
             SELECT *
             FROM feed_events
             WHERE user_id = ?
-            OR user_id IN (SELECT friend_id
-                FROM users_friends
-                WHERE user_id = ?)
-            ORDER BY timestamp
+            ORDER BY id;
             """;
     @Language("SQL")
     private static final String FIND_ONE_EVENTS_QUERY = """
@@ -45,7 +42,7 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
     private static final String FIND_ALL_EVENT_QUERY = """
             SELECT *
             FROM feed_events
-            ORDER BY timestamp
+            ORDER BY id;
             """;
 
 
@@ -68,8 +65,7 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
     }
 
     public List<Event> findUserEvents(Long userId) {
-        System.out.println(jdbc.query(FIND_USER_EVENTS_QUERY, mapper, userId, userId));
-        return jdbc.query(FIND_USER_EVENTS_QUERY, mapper, userId, userId);
+        return jdbc.query(FIND_USER_EVENTS_QUERY, mapper, userId);
     }
 
     public List<Event> findAllEvents() {

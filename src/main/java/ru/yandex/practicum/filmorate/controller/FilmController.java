@@ -72,7 +72,6 @@ public class FilmController {
     public ResponseEntity<List<FilmDto>> getFilmsPopular(@RequestParam(name = "count", required = false, defaultValue = "10") int count,
                                                          @RequestParam(name = "genreId", required = false) Long genreId,
                                                          @RequestParam(name = "year", required = false) Integer year) {
-
         if (genreId != null && year != null) {
             log.info("Получен запрос на получение списка из count={} популярных фильмов genreId={} за {} год",
                     count, genreId, year);
@@ -94,9 +93,7 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public ResponseEntity<Collection<FilmDto>> getSortedFilms(
-            @PathVariable("directorId") Long directorId,
-            @RequestParam(defaultValue = "year") String sortBy
+    public ResponseEntity<Collection<FilmDto>> getSortedFilms(@PathVariable("directorId") Long directorId, @RequestParam(defaultValue = "year") String sortBy
     ) {
         return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
     }
@@ -108,12 +105,9 @@ public class FilmController {
         List<FilmDto> common = filmService.getCommonFilms(userId, friendId);
         return ResponseEntity.ok().body(common);
     }
-    //для реализации функционала ветки add-search
+
     @GetMapping("/search")
-    public ResponseEntity<List<FilmDto>> searchFilms(
-            @RequestParam String query,
-            @RequestParam String by
-    ) {
+    public ResponseEntity<List<FilmDto>> searchFilms(@RequestParam String query, @RequestParam String by) {
         log.info("Запрос на поиск фильмов: query='{}', by='{}'", query, by);
         return ResponseEntity.ok().body(filmService.searchFilms(query, by));
     }

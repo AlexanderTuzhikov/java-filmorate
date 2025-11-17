@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
-import ru.yandex.practicum.filmorate.exception.NotFoundDirector;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.DirectorMapper;
@@ -27,7 +26,7 @@ public class DirectorService {
 
     public DirectorDto getDirectorById(Long directorDd) {
         return directorDbRepository.findDirector(directorDd).map(DirectorMapper::mapToDirectorDto)
-                .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));//заменила исключение
+                .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));
     }
 
     public Director addDirector(Director director) {
@@ -41,7 +40,7 @@ public class DirectorService {
 
     public Director updateDirector(Director director) {
         if (!directorDbRepository.containDirector(director.getId())) {
-            throw new NotFoundException("Режиссер не найден"); //заменила исключение
+            throw new NotFoundException("Режиссер не найден");
         }
 
         if (director.getName() == null || director.getName().trim().isEmpty()) {
@@ -55,8 +54,9 @@ public class DirectorService {
 
     public void removeDirectorById(Long directorId) {
         if (!directorDbRepository.containDirector(directorId)) {
-            throw new NotFoundException("Режиссер не найден");//заменила исключение
+            throw new NotFoundException("Режиссер не найден");
         }
+
         directorDbRepository.removeDirector(directorId);
         log.info("Режиссер с ID= {} - удален", directorId);
     }

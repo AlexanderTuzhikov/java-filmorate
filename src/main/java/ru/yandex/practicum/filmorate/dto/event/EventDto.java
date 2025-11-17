@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.enums.Operation;
 @Builder(toBuilder = true)
 public class EventDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
-    private Long id;
+    private Long eventId;
     private Long userId;
     private Long entityId;
     private EventType eventType;

@@ -12,19 +12,18 @@ import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.Arrays;
 
 import static ru.yandex.practicum.filmorate.mappers.FilmMapper.*;
 import static ru.yandex.practicum.filmorate.validation.FilmValidator.filmValid;
@@ -107,7 +106,7 @@ public class FilmService {
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
-    //метод для реализации функционала ветки add-search
+
     public List<FilmDto> searchFilms(String query, String by) {
         if (query == null || query.isBlank()) {
             throw new ValidationException("Параметр query не может быть пустым");

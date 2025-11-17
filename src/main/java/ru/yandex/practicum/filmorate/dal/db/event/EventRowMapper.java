@@ -18,7 +18,7 @@ public class EventRowMapper implements RowMapper<Event> {
         Operation operation = Operation.valueOf(resultSet.getString("operation"));
 
         return Event.builder()
-                .id(resultSet.getLong("id"))
+                .eventId(resultSet.getLong("id"))
                 .userId(resultSet.getLong("user_id"))
                 .entityId(resultSet.getLong("entity_id"))
                 .eventType(eventType)
