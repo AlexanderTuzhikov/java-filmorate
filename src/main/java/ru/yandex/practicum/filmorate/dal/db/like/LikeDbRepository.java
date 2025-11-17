@@ -6,10 +6,8 @@ import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
-import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @Slf4j
@@ -40,7 +38,6 @@ public class LikeDbRepository {
                    LEFT JOIN films_likes AS fl ON f.id = fl.film_id
                    GROUP BY f.id
                    ORDER BY COUNT(fl.user_id) DESC
-                   LIMIT ?
             """;
 
     public void save(Long filmId, Long userId) {
@@ -63,10 +60,8 @@ public class LikeDbRepository {
         return jdbc.queryForList(FIND_FILM_LIKES_QUERY, Long.class, filmId);
     }
 
-    public List<Film> findPopularFilms(int count) {
-        return jdbc.queryForList(FIND_POPULAR_FILMS_QUERY, Long.class, count).stream()
-                .map(filmDbRepository::findById)
-                .flatMap(Optional::stream)
-                .toList();
+    public List<Long> findPopularFilms() {
+        return jdbc.queryForList(FIND_POPULAR_FILMS_QUERY, Long.class);
     }
+
 }
