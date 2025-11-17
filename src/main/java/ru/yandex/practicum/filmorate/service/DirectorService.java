@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dto.director.DirectorDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundDirector;
-import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.DirectorMapper;
 import ru.yandex.practicum.filmorate.model.Director;
@@ -27,7 +27,7 @@ public class DirectorService {
 
     public DirectorDto getDirectorById(Long directorDd) {
         return directorDbRepository.findDirector(directorDd).map(DirectorMapper::mapToDirectorDto)
-                .orElseThrow(() -> new NotFoundMpa("Genre с id=" + directorDd + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));
     }
 
     public Director addDirector(Director director) {

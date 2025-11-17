@@ -12,11 +12,9 @@ import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
-import ru.yandex.practicum.filmorate.exception.NotFoundUser;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -88,13 +86,6 @@ public class FilmService {
         saveEvent(userId, filmId, Operation.REMOVE);
     }
 
-    public List<FilmDto> getFilmsPopular(int count) {
-        return likeRepository.findPopularFilms(count)
-                .stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
-    }
-
     public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new InternalServerException("Некорректный параметр сортировки.");
@@ -110,6 +101,60 @@ public class FilmService {
 
         List<Film> films = filmRepository.findCommonFilms(userId, friendId);
         return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getFilmsPopular(int count) {
+        return likeRepository.findPopularFilms()
+                .stream()
+                .map(filmRepository::findById)
+                .flatMap(Optional::stream)
+                .map(FilmMapper::mapToFilmDto)
+                .limit(count)
+                .toList();
+    }
+
+    public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
+        log.debug("Получение {} популярных фильмов по жанру {}", count, genreId);
+        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
+
+        return popularFilms.stream()
+                .filter(filmsByGenre::contains)
+                .limit(count)
+                .map(filmRepository::findById)
+                .flatMap(Optional::stream)
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getFilmsPopularByYear(int count, long year) {
+        log.debug("Получение {} популярных фильмов за {} год", count, year);
+        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
+
+        return popularFilms.stream()
+                .filter(filmsByYear::contains)
+                .limit(count)
+                .map(filmRepository::findById)
+                .flatMap(Optional::stream)
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getFilmsPopularByGenreIdAndYear(int count, long genreId, long year) {
+        log.debug("Получение {} популярных фильмов по жанру {} за {} год", count, genreId, year);
+        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
+        List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
+
+        return popularFilms.stream()
+                .filter(filmsByYear::contains)
+                .filter(filmsByGenre::contains)
+                .limit(count)
+                .map(filmRepository::findById)
+                .flatMap(Optional::stream)
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
