@@ -103,6 +103,41 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                            WHERE fd.director_id =?)
             ORDER BY l.likes DESC NULLS LAST""";
 
+    @Language("SQL")
+    private static final String SEARCH_BY_TITLE_OR_DIRECTOR = """
+        SELECT f.*, COUNT(fl.user_id) AS likes
+        FROM films f
+        LEFT JOIN films_likes fl ON f.id = fl.film_id
+        LEFT JOIN film_directors fd ON f.id = fd.film_id
+        LEFT JOIN directors d ON fd.director_id = d.id
+        WHERE LOWER(f.name) LIKE ?
+           OR LOWER(d.name) LIKE ?
+        GROUP BY f.id
+        ORDER BY likes DESC
+        """;
+
+    @Language("SQL")
+    private static final String SEARCH_BY_TITLE = """
+        SELECT f.*, COUNT(fl.user_id) AS likes
+        FROM films f
+        LEFT JOIN films_likes fl ON f.id = fl.film_id
+        WHERE LOWER(f.name) LIKE ?
+        GROUP BY f.id
+        ORDER BY likes DESC
+        """;
+
+    @Language("SQL")
+    private static final String SEARCH_BY_DIRECTOR = """
+        SELECT f.*, COUNT(fl.user_id) AS likes
+        FROM films f
+        LEFT JOIN films_likes fl ON f.id = fl.film_id
+        LEFT JOIN film_directors fd ON f.id = fd.film_id
+        LEFT JOIN directors d ON fd.director_id = d.id
+        WHERE LOWER(d.name) LIKE ?
+        GROUP BY f.id
+        ORDER BY likes DESC
+        """;
+
     private static final String FIND_COMMON_FILMS_SQL = """
         SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
         FROM films f
@@ -149,6 +184,9 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId);
         insertFilmGenres(id, film.getGenres());
+        //проставляем id фильму перед сохранением связки режиссеров
+        film = film.toBuilder().id(id).build();
+
         directorDbRepository.saveFilmDirectors(film);
 
         Optional<Film> savedFilm = findById(id);
@@ -206,13 +244,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     private Film getFilm(Film film) {
-        Set<Genre> genres = Set.copyOf(genreRepository.findFilmGenre(film.getId()));
+        Set<Genre> genres = new HashSet<>(genreRepository.findFilmGenre(film.getId()));//Set.copyOf создает неизменяемые коллекции, заменила его
         Mpa mpa = Optional.ofNullable(film.getMpa())
                 .map(Mpa::getId)
                 .flatMap(mpaRepository::findMpa)
-                .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA не найден"));
-        Set<Director> directors = Set.copyOf(directorDbRepository.findFilmDirector(film.getId()));
-                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));//заменила исключение
+
+        Set<Director> directors = new HashSet<>(directorDbRepository.findFilmDirector(film.getId()));//убрала .orElseThrow потому что у фильма может быть 0 режиссеров
 
         return Film.builder()
                 .id(film.getId())
@@ -274,11 +312,11 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
         if (!directorDbRepository.containDirector(directorId)) {
-            throw new NotFoundDirector("Режиссер с ID= " + directorId + " - не найден");
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
         }
 
         String query = SORT_FILMS_BY_LIKES_QUERY;
-        if (sort.equals("year")) {
+        if ("year".equals(sort)) {      //защита от NPE, если вдруг sort == null
             query = SORT_FILMS_BY_YEAR_QUERY;
         }
 
@@ -297,7 +335,33 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             genres.sort(Comparator.comparing(Genre::getId));
             film.setGenres(new LinkedHashSet<>(genres));
             film.setDirectors(new HashSet<>(directorDbRepository.findFilmDirector(film.getId())));
+            // добавляем MPA
+            if (film.getMpa() != null && film.getMpa().getId() != null) {
+                Mpa fullMpa = mpaRepository.findMpa(film.getMpa().getId()).orElse(null);
+                film.setMpa(fullMpa);
+            }
         }
+    }
+    //метод для реализации функционала ветки add-search
+    public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
+        String like = "%" + query.toLowerCase() + "%";
+
+        List<Film> films;
+
+        if (byTitle && byDirector) {
+            films = jdbc.query(SEARCH_BY_TITLE_OR_DIRECTOR, mapper, like, like);
+        } else if (byTitle) {
+            films = jdbc.query(SEARCH_BY_TITLE, mapper, like);
+        } else if (byDirector) {
+            films = jdbc.query(SEARCH_BY_DIRECTOR, mapper, like);
+        } else {
+            return List.of();
+        }
+
+        // mapper вернул "сырые" Film из таблицы films - обогащаем их жанрами, MPA и режиссёрами
+        return films.stream()
+                .map(this::getFilm)
+                .toList();
     }
 
     public List<Film> findCommonFilms(long userId, long friendId) {

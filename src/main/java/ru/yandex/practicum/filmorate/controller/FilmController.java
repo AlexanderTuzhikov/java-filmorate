@@ -89,4 +89,13 @@ public class FilmController {
         List<FilmDto> common = filmService.getCommonFilms(userId, friendId);
         return ResponseEntity.ok().body(common);
     }
+    //для реализации функционала ветки add-search
+    @GetMapping("/search")
+    public ResponseEntity<List<FilmDto>> searchFilms(
+            @RequestParam String query,
+            @RequestParam String by
+    ) {
+        log.info("Запрос на поиск фильмов: query='{}', by='{}'", query, by);
+        return ResponseEntity.ok().body(filmService.searchFilms(query, by));
+    }
 }
