@@ -6,7 +6,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
-import ru.yandex.practicum.filmorate.exception.NotFoundDirector;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -78,7 +78,7 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
 
     public Optional<Director> findDirector(Long directorId) {
         if (!containDirector(directorId)) {
-            throw new NotFoundDirector("Режиссер с ID= " + directorId + " - не найден");
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
         }
         return findOne(FIND_DIRECTOR_QUERY, directorId);
     }
@@ -94,7 +94,7 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
 
     public void removeDirector(Long directorId) {
         if (!containDirector(directorId)) {
-            throw new NotFoundDirector("Режиссер с ID= " + directorId + " - не найден");
+            throw new NotFoundException("Режиссер с ID= " + directorId + " - не найден");//заменила исключение
         }
         delete(DELETE_DIRECTOR_QUERY, directorId);
     }

@@ -27,7 +27,7 @@ public class DirectorService {
 
     public DirectorDto getDirectorById(Long directorDd) {
         return directorDbRepository.findDirector(directorDd).map(DirectorMapper::mapToDirectorDto)
-                .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));//заменила исключение
     }
 
     public Director addDirector(Director director) {
@@ -41,7 +41,7 @@ public class DirectorService {
 
     public Director updateDirector(Director director) {
         if (!directorDbRepository.containDirector(director.getId())) {
-            throw new NotFoundDirector("Режиссер не найден");
+            throw new NotFoundException("Режиссер не найден"); //заменила исключение
         }
 
         if (director.getName() == null || director.getName().trim().isEmpty()) {
@@ -55,7 +55,7 @@ public class DirectorService {
 
     public void removeDirectorById(Long directorId) {
         if (!directorDbRepository.containDirector(directorId)) {
-            throw new NotFoundDirector("Режиссер не найден");
+            throw new NotFoundException("Режиссер не найден");//заменила исключение
         }
         directorDbRepository.removeDirector(directorId);
         log.info("Режиссер с ID= {} - удален", directorId);
