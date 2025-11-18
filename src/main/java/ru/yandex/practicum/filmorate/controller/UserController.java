@@ -81,15 +81,9 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/feed")
-    public ResponseEntity<List<EventDto>> getUserEvents(@PathVariable("userId") Long userId) {
+    public ResponseEntity<List<EventDto>> getUserFeed(@PathVariable("userId") Long userId) {
         log.info("Получен запрос на получение ленты событий пользователя id={}", userId);
-        return ResponseEntity.ok().body(userService.getUserEvents(userId));
-    }
-
-    @GetMapping("/feed")
-    public ResponseEntity<List<EventDto>> getAllEvents() {
-        log.info("Получен запрос на получение ленты событий");
-        return ResponseEntity.ok().body(userService.getAllEvents());
+        return ResponseEntity.ok().body(userService.getUserFeed(userId));
     }
 
     @GetMapping("/{userId}/recommendations")

@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.db.event.EventDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.like.LikeDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
-import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
@@ -35,7 +33,7 @@ public class FilmService {
     private final FilmDbRepository filmRepository;
     private final UserDbRepository userRepository;
     private final LikeDbRepository likeRepository;
-    private final EventDbRepository eventRepository;
+    private final EventService eventService;
 
     public FilmDto postFilm(NewFilmRequest request) {
         Film film = mapToFilm(request);
@@ -79,20 +77,20 @@ public class FilmService {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
 
         if (likeRepository.findFilmLikes(filmId).contains(userId)) {
-            saveEvent(userId, filmId, Operation.ADD);
+            eventService.postEvent(userId, filmId, EventType.LIKE, Operation.ADD);
             log.info("Повторное добавление лайка фильму id= {}, от пользователя id= {}", filmId, userId);
             return;
         }
 
         likeRepository.save(filmId, userId);
-        saveEvent(userId, filmId, Operation.ADD);
+        eventService.postEvent(userId, filmId, EventType.LIKE, Operation.ADD);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден: id=" + filmId));
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
         likeRepository.delete(filmId, userId);
-        saveEvent(userId, filmId, Operation.REMOVE);
+        eventService.postEvent(userId, filmId, EventType.LIKE, Operation.REMOVE);
     }
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
@@ -193,16 +191,5 @@ public class FilmService {
                 .flatMap(Optional::stream)
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
-    }
-
-    private void saveEvent(Long userId, Long entityId, Operation operation) {
-        NewEventRequest newEvent = NewEventRequest.builder()
-                .userId(userId)
-                .entityId(entityId)
-                .eventType(EventType.LIKE)
-                .operation(operation)
-                .build();
-
-        eventRepository.save(newEvent);
     }
 }

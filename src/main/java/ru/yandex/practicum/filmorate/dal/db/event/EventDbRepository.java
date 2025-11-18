@@ -37,13 +37,6 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
             FROM feed_events
             WHERE event_id = ?
             """;
-    @Language("SQL")
-    private static final String FIND_ALL_EVENT_QUERY = """
-            SELECT *
-            FROM feed_events
-            """;
-
-
 
     public Event save(NewEventRequest newEvent) {
         long eventId = insert(INSERT_EVENT_QUERY, newEvent.getUserId(), newEvent.getEntityId(),
@@ -64,10 +57,6 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
 
     public List<Event> findUserEvents(Long userId) {
         return jdbc.query(FIND_USER_EVENTS_QUERY, mapper, userId);
-    }
-
-    public List<Event> findAllEvents() {
-        return jdbc.query(FIND_ALL_EVENT_QUERY, mapper);
     }
 }
 

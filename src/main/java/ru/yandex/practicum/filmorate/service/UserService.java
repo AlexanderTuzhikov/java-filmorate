@@ -4,12 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.db.event.EventDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.friendship.FriendshipDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.event.EventDto;
-import ru.yandex.practicum.filmorate.dto.event.NewEventRequest;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
@@ -36,8 +34,9 @@ import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 public class UserService {
     private final UserDbRepository userRepository;
     private final FriendshipDbRepository friendshipRepository;
-    private final EventDbRepository eventRepository;
     private final FilmDbRepository filmDbRepository;
+    private final EventService eventService;
+    private final FeedService feedService;
 
     public UserDto postUser(NewUserRequest request) {
         User user = mapToUser(request);
@@ -93,7 +92,7 @@ public class UserService {
         log.info("Пользователь id= {} добавил друга id= {} статус дружбы=CONFIRMED. " +
                 "Пользователь id= {} получил запрос на добавление в друзья от id= {} статус дружбы=NOT_CONFIRMED.", userId, friendId, friendId, userId);
 
-        saveEvent(userId, friendId, Operation.ADD);
+        eventService.postEvent(userId, friendId,EventType.FRIEND, Operation.ADD);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
@@ -106,7 +105,7 @@ public class UserService {
         }
 
         friendshipRepository.delete(userId, friendId);
-        saveEvent(userId, friendId, Operation.REMOVE);
+        eventService.postEvent(userId, friendId,EventType.REVIEW, Operation.ADD);
     }
 
     public void deleteUser(Long userId) {
@@ -140,30 +139,13 @@ public class UserService {
                 .toList();
     }
 
-    public List<EventDto> getUserEvents(Long userId) {
+    public List<EventDto> getUserFeed(Long userId) {
         checkUserExists(userId);
-        return eventRepository.findUserEvents(userId).stream()
+
+        return feedService.getUserFeed(userId).stream()
                 .map(EventMapper::mapEventDto)
                 .sorted(Comparator.comparing(EventDto::getTimestamp))
                 .toList();
-    }
-
-    public List<EventDto> getAllEvents() {
-        return eventRepository.findAllEvents().stream()
-                .map(EventMapper::mapEventDto)
-                .sorted(Comparator.comparing(EventDto::getUserId))
-                .toList();
-    }
-
-    private void saveEvent(Long userId, Long entityId, Operation operation) {
-        NewEventRequest newEvent = NewEventRequest.builder()
-                .userId(userId)
-                .entityId(entityId)
-                .eventType(EventType.FRIEND)
-                .operation(operation)
-                .build();
-
-        eventRepository.save(newEvent);
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
