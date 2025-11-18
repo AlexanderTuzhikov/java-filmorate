@@ -79,7 +79,6 @@ public class ReviewService {
     public void putLike(Long reviewId, Long userId) {
         checkReviewExists(reviewId);
         checkUserExists(userId);
-        saveReviewEvent(userId, reviewId, Operation.UPDATE);
         reviewRepository.addLike(reviewId, userId);
     }
 
@@ -92,7 +91,6 @@ public class ReviewService {
     public void deleteLike(Long reviewId, Long userId) {
         checkReviewExists(reviewId);
         checkUserExists(userId);
-        saveReviewEvent(userId, reviewId, Operation.REMOVE);
         reviewRepository.removeLike(reviewId, userId);
     }
 

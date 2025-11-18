@@ -79,9 +79,11 @@ public class FilmService {
         userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
 
         if (likeRepository.findFilmLikes(filmId).contains(userId)) {
+            saveEvent(userId, filmId, Operation.ADD);
             log.info("Повторное добавление лайка фильму id= {}, от пользователя id= {}", filmId, userId);
             return;
         }
+
         likeRepository.save(filmId, userId);
         saveEvent(userId, filmId, Operation.ADD);
     }
