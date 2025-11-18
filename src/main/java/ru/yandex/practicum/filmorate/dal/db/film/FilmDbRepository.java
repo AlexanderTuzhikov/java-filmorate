@@ -342,7 +342,7 @@ log.info("UPDATE filmId={}, genres from request = {}",
         List<Long> current = findFilmGenresId(filmId);
         log.info("updateFilmGenres: after update filmId={} genres in BD = {}", filmId, current);
         */
-    } 
+    }
 
     private void deleteFilmGenre(Long filmId, Long genreId) {
         int rowsDeleted = jdbc.update(DELETE_FILM_GENRE_QUERY, filmId, genreId);
