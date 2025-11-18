@@ -4,20 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
-import ru.yandex.practicum.filmorate.dal.db.friendship.FriendshipDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.event.EventDto;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
-import ru.yandex.practicum.filmorate.enums.EventType;
-import ru.yandex.practicum.filmorate.enums.Operation;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.EventMapper;
-import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validation.UserValidator;
@@ -33,9 +27,8 @@ import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 @AllArgsConstructor
 public class UserService {
     private final UserDbRepository userRepository;
-    private final FriendshipDbRepository friendshipRepository;
-    private final FilmDbRepository filmDbRepository;
-    private final EventService eventService;
+    private final FriendshipService friendshipService;
+    private final FilmService filmService;
     private final FeedService feedService;
 
     public UserDto postUser(NewUserRequest request) {
@@ -73,39 +66,15 @@ public class UserService {
     }
 
     public void putFriend(Long userId, Long friendId) {
-        Optional<User> user = userRepository.findById(userId);
-        Optional<User> friend = userRepository.findById(friendId);
-
-        if (user.isEmpty() || friend.isEmpty()) {
-            log.warn("Попытка создать дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundException("Пользователи для добавления в дружбу не найдены");
-        }
-
-        boolean status = friendshipRepository.save(userId, friendId);
-
-        if (!status) {
-            log.error("Ошибка сервера при обработки запроса добавления в дружбу пользователей userId= {}," +
-                    " friendId= {}", userId, friendId);
-            throw new InternalServerException("Ошибка сервера при добавлении в друзья");
-        }
-
-        log.info("Пользователь id= {} добавил друга id= {} статус дружбы=CONFIRMED. " +
-                "Пользователь id= {} получил запрос на добавление в друзья от id= {} статус дружбы=NOT_CONFIRMED.", userId, friendId, friendId, userId);
-
-        eventService.postEvent(userId, friendId,EventType.FRIEND, Operation.ADD);
+        checkUserExists(userId);
+        checkUserExists(friendId);
+        friendshipService.postFriendship(userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
-        Optional<User> user = userRepository.findById(userId);
-        Optional<User> friend = userRepository.findById(friendId);
-
-        if (user.isEmpty() || friend.isEmpty()) {
-            log.warn("Попытка удалить дружбу не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundException("Пользователи для удаления дружбы не найдены");
-        }
-
-        friendshipRepository.delete(userId, friendId);
-        eventService.postEvent(userId, friendId,EventType.REVIEW, Operation.ADD);
+        checkUserExists(userId);
+        checkUserExists(friendId);
+        friendshipService.deleteFriendship(userId, friendId);
     }
 
     public void deleteUser(Long userId) {
@@ -113,30 +82,16 @@ public class UserService {
     }
 
     public List<UserDto> getFriends(Long userId) {
-        Optional<User> user = userRepository.findById(userId);
+        checkUserExists(userId);
 
-        if (user.isEmpty()) {
-            log.warn("Попытка получить друзей не существующего пользователя userId= {}", userId);
-            throw new NotFoundException("Пользователь не найден");
-        }
-
-        return friendshipRepository.findAllFriends(userId).stream()
-                .map(UserMapper::mapToUserDto)
-                .toList();
+        return friendshipService.getFriends(userId);
     }
 
     public List<UserDto> getCommonFriends(Long userId, Long friendId) {
-        Optional<User> user = userRepository.findById(userId);
-        Optional<User> friend = userRepository.findById(friendId);
+        checkUserExists(userId);
+        checkUserExists(friendId);
 
-        if (user.isEmpty() || friend.isEmpty()) {
-            log.warn("Попытка запроса общих друзей для не существующих пользователей userId= {}, friendId= {}", userId, friendId);
-            throw new NotFoundException("Пользователи для запроса общих друзей не найдены");
-        }
-
-        return friendshipRepository.findCommonFriends(userId, friendId).stream()
-                .map(UserMapper::mapToUserDto)
-                .toList();
+        return friendshipService.getCommonFriends(userId, friendId);
     }
 
     public List<EventDto> getUserFeed(Long userId) {
@@ -149,9 +104,7 @@ public class UserService {
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
-        return filmDbRepository.findRecommendationsFilms(userId).stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
+        return filmService.getRecommendations(userId);
     }
 
     private void checkUserExists(Long userId) {

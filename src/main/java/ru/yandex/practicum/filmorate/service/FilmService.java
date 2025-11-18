@@ -5,13 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
-import ru.yandex.practicum.filmorate.dal.db.like.LikeDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.enums.EventType;
-import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -32,8 +29,7 @@ import static ru.yandex.practicum.filmorate.validation.FilmValidator.filmValid;
 public class FilmService {
     private final FilmDbRepository filmRepository;
     private final UserDbRepository userRepository;
-    private final LikeDbRepository likeRepository;
-    private final EventService eventService;
+    private final LikeService likeService;
 
     public FilmDto postFilm(NewFilmRequest request) {
         Film film = mapToFilm(request);
@@ -43,15 +39,9 @@ public class FilmService {
     }
 
     public FilmDto putFilm(@NotNull UpdateFilmRequest request) {
-        Optional<Film> findFilm = filmRepository.findById(request.getId());
-
-        if (findFilm.isEmpty()) {
-            log.warn("Фильм userId= {} для обновления не найден", request.getId());
-            throw new NotFoundException("Фильм для обновления не найден");
-        }
-
-        Film film = updateFilmFields(findFilm.get(), request);
-        Film validFilm = filmValid(film);
+        Film film = checkFilmExists(request.getId());
+        Film updatedFilmLine = updateFilmFields(film, request);
+        Film validFilm = filmValid(updatedFilmLine);
         Film updatedFilm = filmRepository.update(validFilm);
         return mapToFilmDto(updatedFilm);
     }
@@ -73,24 +63,15 @@ public class FilmService {
     }
 
     public void putLike(Long filmId, Long userId) {
-        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден: id=" + filmId));
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
-
-        if (likeRepository.findFilmLikes(filmId).contains(userId)) {
-            eventService.postEvent(userId, filmId, EventType.LIKE, Operation.ADD);
-            log.info("Повторное добавление лайка фильму id= {}, от пользователя id= {}", filmId, userId);
-            return;
-        }
-
-        likeRepository.save(filmId, userId);
-        eventService.postEvent(userId, filmId, EventType.LIKE, Operation.ADD);
+        checkFilmExists(filmId);
+        checkUserExists(userId);
+        likeService.postLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм не найден: id=" + filmId));
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
-        likeRepository.delete(filmId, userId);
-        eventService.postEvent(userId, filmId, EventType.LIKE, Operation.REMOVE);
+        checkFilmExists(filmId);
+        checkUserExists(userId);
+        likeService.deleteLike(filmId, userId);
     }
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
@@ -100,11 +81,9 @@ public class FilmService {
         return filmRepository.getSortedFilms(directorId, sortBy);
     }
 
-    public List<FilmDto> getCommonFilms(long userId, long friendId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + userId));
-        userRepository.findById(friendId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден: id=" + friendId));
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        checkUserExists(userId);
+        checkUserExists(friendId);
 
         List<Film> films = filmRepository.findCommonFilms(userId, friendId);
         return films.stream()
@@ -140,7 +119,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopular(int count) {
-        return likeRepository.findPopularFilms()
+        return likeService.getFilmsPopular()
                 .stream()
                 .map(filmRepository::findById)
                 .flatMap(Optional::stream)
@@ -151,7 +130,7 @@ public class FilmService {
 
     public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
         log.debug("Получение {} популярных фильмов по жанру {}", count, genreId);
-        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
 
         return popularFilms.stream()
@@ -165,7 +144,7 @@ public class FilmService {
 
     public List<FilmDto> getFilmsPopularByYear(int count, long year) {
         log.debug("Получение {} популярных фильмов за {} год", count, year);
-        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
 
         return popularFilms.stream()
@@ -179,7 +158,7 @@ public class FilmService {
 
     public List<FilmDto> getFilmsPopularByGenreIdAndYear(int count, long genreId, long year) {
         log.debug("Получение {} популярных фильмов по жанру {} за {} год", count, genreId, year);
-        List<Long> popularFilms = likeRepository.findPopularFilms();
+        List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
 
@@ -191,5 +170,20 @@ public class FilmService {
                 .flatMap(Optional::stream)
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        return filmRepository.findRecommendationsFilms(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    private void checkUserExists(Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
+    }
+
+    private Film checkFilmExists(Long filmId) {
+        return filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 }
