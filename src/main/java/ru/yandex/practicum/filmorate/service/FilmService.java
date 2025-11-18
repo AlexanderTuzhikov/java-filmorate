@@ -53,9 +53,8 @@ public class FilmService {
     }
 
     public FilmDto getFilm(Long filmId) {
-        return filmRepository.findById(filmId)
-                .map(FilmMapper::mapToFilmDto)
-                .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
+        Film film = checkFilmExists(filmId);
+        return mapToFilmDto(film);
     }
 
     public void deleteFilm(Long filmId) {
@@ -78,6 +77,7 @@ public class FilmService {
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
+
         return filmRepository.getSortedFilms(directorId, sortBy);
     }
 
@@ -86,6 +86,7 @@ public class FilmService {
         checkUserExists(friendId);
 
         List<Film> films = filmRepository.findCommonFilms(userId, friendId);
+
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
@@ -129,7 +130,6 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
-        log.debug("Получение {} популярных фильмов по жанру {}", count, genreId);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
 
@@ -143,7 +143,6 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByYear(int count, long year) {
-        log.debug("Получение {} популярных фильмов за {} год", count, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
 
@@ -157,7 +156,6 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByGenreIdAndYear(int count, long genreId, long year) {
-        log.debug("Получение {} популярных фильмов по жанру {} за {} год", count, genreId, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);

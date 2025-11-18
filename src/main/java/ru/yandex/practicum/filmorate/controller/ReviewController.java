@@ -15,11 +15,10 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/reviews")
 @AllArgsConstructor
+@RequestMapping("/reviews")
 public class ReviewController {
     private final ReviewService reviewService;
-
 
     @PostMapping
     public ResponseEntity<ReviewDto> postReview(@Valid @RequestBody NewReviewRequest request) {

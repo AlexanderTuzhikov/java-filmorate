@@ -89,7 +89,8 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             WHERE f.id IN (SELECT fd.film_id
                            FROM film_directors AS fd
                            WHERE fd.director_id =?)
-            ORDER BY release_date ASC NULLS LAST""";
+            ORDER BY release_date NULLS LAST
+            """;
     @Language("SQL")
     private static final String SORT_FILMS_BY_LIKES_QUERY = """
             SELECT f.*, m.id AS mpa_id, m.name AS mpa_name
@@ -101,8 +102,8 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             WHERE f.id IN (SELECT fd.film_id
                            FROM film_directors fd
                            WHERE fd.director_id =?)
-            ORDER BY l.likes DESC NULLS LAST""";
-
+            ORDER BY l.likes DESC NULLS LAST
+            """;
     @Language("SQL")
     private static final String SEARCH_BY_TITLE_OR_DIRECTOR = """
             SELECT f.*, COUNT(fl.user_id) AS likes
@@ -115,7 +116,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             GROUP BY f.id
             ORDER BY likes DESC
             """;
-
     @Language("SQL")
     private static final String SEARCH_BY_TITLE = """
             SELECT f.*, COUNT(fl.user_id) AS likes
@@ -137,7 +137,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             GROUP BY f.id
             ORDER BY likes DESC
             """;
-
     private static final String FIND_COMMON_FILMS_SQL = """
             SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
             FROM films f
@@ -150,7 +149,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             ) l ON f.id = l.film_id
             ORDER BY l.likes_count DESC
             """;
-
     private static final String FIND_RECOMMENDATIONS_FILM_QUERY = """
             SELECT *
             FROM films
@@ -173,14 +171,12 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
                 FROM films_likes
                 WHERE user_id = ?))
             """;
-
     @Language("SQL")
     private static final String FIND_FILMS_BY_YEAR_QUERY = """
             SELECT f.id
             FROM films f
             WHERE EXTRACT(YEAR FROM f.release_date) = ?
             """;
-
     @Language("SQL")
     private static final String FIND_ALL_FILMS_BY_GENRE_ID_QUERY = """
             SELECT film_id
@@ -275,13 +271,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
         );
 
 
-        Set<Genre> genres = new HashSet<>(genreRepository.findFilmGenre(film.getId()));//Set.copyOf создает неизменяемые коллекции, заменила его
+        Set<Genre> genres = new HashSet<>(genreRepository.findFilmGenre(film.getId()));
         Mpa mpa = Optional.ofNullable(film.getMpa())
                 .map(Mpa::getId)
                 .flatMap(mpaRepository::findMpa)
-                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));//заменила исключение
+                .orElseThrow(() -> new NotFoundException("Рейтинг MPA не найден"));
 
-        Set<Director> directors = new HashSet<>(directorDbRepository.findFilmDirector(film.getId()));//убрала .orElseThrow потому что у фильма может быть 0 режиссеров
+        Set<Director> directors = new HashSet<>(directorDbRepository.findFilmDirector(film.getId()));
 
         return Film.builder()
                 .id(film.getId())

@@ -32,41 +32,42 @@ public class ReviewService {
         Review review = ReviewMapper.mapToReview(request);
         Review saved = reviewRepository.save(review);
         eventService.postEvent(saved.getUserId(), saved.getReviewId(), EventType.REVIEW, Operation.ADD);
+
         return ReviewMapper.mapToReviewDto(saved);
     }
 
     public ReviewDto putReview(UpdateReviewRequest request) {
-        Review review = reviewRepository.getById(request.getReviewId())
-                .orElseThrow(() -> new NotFoundException("Отзыв с id=" + request.getReviewId() + " не найден"));
+        Review review = checkReviewExists(request.getReviewId());
+
         Review updated = ReviewMapper.updateReviewFields(review, request);
         Review updatedFromBd = reviewRepository.update(updated);
         eventService.postEvent(updatedFromBd.getUserId(), updatedFromBd.getReviewId(), EventType.REVIEW, Operation.UPDATE);
+
         return ReviewMapper.mapToReviewDto(updatedFromBd);
     }
 
     public void deleteReview(Long reviewId) {
-        Review review = reviewRepository.getById(reviewId)
-                .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
+        Review review = checkReviewExists(reviewId);
+
         reviewRepository.delete(reviewId);
         eventService.postEvent(review.getUserId(), review.getReviewId(), EventType.REVIEW, Operation.REMOVE);
     }
 
     public ReviewDto getReview(Long reviewId) {
-        Review review = reviewRepository.getById(reviewId)
-                .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
+        Review review = checkReviewExists(reviewId);
+
         return ReviewMapper.mapToReviewDto(review);
     }
 
     public List<ReviewDto> getReviews(Long filmId, Integer count) {
-        int c = (count == null) ? 10 : count;
+        int reviewsCount = (count == null) ? 10 : count;
         List<Review> reviews;
 
         if (filmId != null) {
-            filmRepository.findById(filmId)
-                    .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
-            reviews = reviewRepository.getByFilmId(filmId, c);
+            checkFilmExists(filmId);
+            reviews = reviewRepository.getByFilmId(filmId, reviewsCount);
         } else {
-            reviews = reviewRepository.getAll(c);
+            reviews = reviewRepository.getAll(reviewsCount);
         }
 
         return reviews.stream()
@@ -108,8 +109,8 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
     }
 
-    private void checkReviewExists(Long reviewId) {
-        reviewRepository.getById(reviewId)
+    private Review checkReviewExists(Long reviewId) {
+        return reviewRepository.getById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
     }
 }

@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.intellij.lang.annotations.Language;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 
 import java.util.List;
 
@@ -13,7 +12,6 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class LikeDbRepository {
-    private final FilmDbRepository filmDbRepository;
     private final JdbcTemplate jdbc;
 
     @Language("SQL")
@@ -63,5 +61,4 @@ public class LikeDbRepository {
     public List<Long> findPopularFilms() {
         return jdbc.queryForList(FIND_POPULAR_FILMS_QUERY, Long.class);
     }
-
 }

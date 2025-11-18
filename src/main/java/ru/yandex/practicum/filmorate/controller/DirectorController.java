@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,13 +15,10 @@ import java.util.Collection;
 
 @Slf4j
 @RestController
+@AllArgsConstructor
 @RequestMapping("/directors")
 public class DirectorController {
     private final DirectorService directorService;
-
-    public DirectorController(DirectorService directorService) {
-        this.directorService = directorService;
-    }
 
     @GetMapping
     public ResponseEntity<Collection<DirectorDto>> getAllDirectors() {

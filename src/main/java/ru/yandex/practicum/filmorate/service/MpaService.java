@@ -7,9 +7,12 @@ import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.dto.mpa.MpaDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.MpaMapper;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.Comparator;
 import java.util.List;
+
+import static ru.yandex.practicum.filmorate.mappers.MpaMapper.mapToMpaDto;
 
 @Slf4j
 @Service
@@ -25,7 +28,12 @@ public class MpaService {
     }
 
     public MpaDto getMpa(Long mapId) {
-        return mpaRepository.findMpa(mapId).map(MpaMapper::mapToMpaDto)
+        Mpa mpa = checkMpaExists(mapId);
+        return mapToMpaDto(mpa);
+    }
+
+    private Mpa checkMpaExists(Long mapId) {
+        return mpaRepository.findMpa(mapId)
                 .orElseThrow(() -> new NotFoundException("Mpa с id=" + mapId + " не найден"));
     }
 }

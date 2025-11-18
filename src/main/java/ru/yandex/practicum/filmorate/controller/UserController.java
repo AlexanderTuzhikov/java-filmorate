@@ -17,8 +17,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/users")
 @AllArgsConstructor
+@RequestMapping("/users")
 public class UserController {
     private final UserService userService;
 

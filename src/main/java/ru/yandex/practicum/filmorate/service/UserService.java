@@ -18,7 +18,6 @@ import ru.yandex.practicum.filmorate.validation.UserValidator;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.mappers.UserMapper.*;
 
@@ -39,24 +38,17 @@ public class UserService {
     }
 
     public UserDto putUser(@NotNull UpdateUserRequest request) {
-        Optional<User> findUser = userRepository.findById(request.getId());
-
-        if (findUser.isEmpty()) {
-            log.warn("Пользователь userId= {} для обновления не найден", request.getId());
-            throw new NotFoundException("Пользователь для обновления не найден");
-        }
-
-        User user = updateUserFields(findUser.get(), request);
+        User findUser = checkUserExists(request.getId());
+        User user = updateUserFields(findUser, request);
         User validUser = UserValidator.userValid(user);
         User updatedUser = userRepository.update(validUser);
 
         return mapToUserDto(updatedUser);
     }
 
-    public UserDto getUser(Long id) {
-        return userRepository.findById(id)
-                .map(UserMapper::mapToUserDto)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id=" + id + " не найден"));
+    public UserDto getUser(Long userId) {
+        User user = checkUserExists(userId);
+        return mapToUserDto(user);
     }
 
     public List<UserDto> getUsers() {
@@ -107,8 +99,8 @@ public class UserService {
         return filmService.getRecommendations(userId);
     }
 
-    private void checkUserExists(Long userId) {
-        userRepository.findById(userId)
+    private User checkUserExists(Long userId) {
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id=" + userId + " не найден"));
     }
 }

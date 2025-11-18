@@ -7,9 +7,12 @@ import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dto.genre.GenreDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.GenreMapper;
+import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
 import java.util.List;
+
+import static ru.yandex.practicum.filmorate.mappers.GenreMapper.mapToGenreDto;
 
 @Slf4j
 @Service
@@ -25,7 +28,12 @@ public class GenreService {
     }
 
     public GenreDto getGenre(Long genreId) {
-        return genreRepository.findGenre(genreId).map(GenreMapper::mapToGenreDto)
+        Genre genre = checkGenreExists(genreId);
+        return mapToGenreDto(genre);
+    }
+
+    private Genre checkGenreExists(Long genreId) {
+        return genreRepository.findGenre(genreId)
                 .orElseThrow(() -> new NotFoundException("Genre с id=" + genreId + " не найден"));
     }
 }

@@ -17,8 +17,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/films")
 @AllArgsConstructor
+@RequestMapping("/films")
 public class FilmController {
     private final FilmService filmService;
 
@@ -94,8 +94,8 @@ public class FilmController {
     }
 
     @GetMapping("/director/{directorId}")
-    public ResponseEntity<Collection<FilmDto>> getSortedFilms(@PathVariable("directorId") Long directorId, @RequestParam(defaultValue = "year") String sortBy
-    ) {
+    public ResponseEntity<Collection<FilmDto>> getSortedFilms(@PathVariable("directorId") Long directorId,
+                                                              @RequestParam(defaultValue = "year") String sortBy) {
         log.info("Получен запрос на получение списка фильмов director id={} c сортировкой по {}", directorId, sortBy);
         return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
     }

@@ -14,8 +14,8 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/mpa")
 @AllArgsConstructor
+@RequestMapping("/mpa")
 public class MpaController {
     private final MpaService mpaService;
 

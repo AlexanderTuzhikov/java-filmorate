@@ -16,6 +16,7 @@ import java.util.Optional;
 @Repository
 @Slf4j
 public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
+
     public EventDbRepository(JdbcTemplate jdbc, RowMapper<Event> mapper) {
         super(jdbc, mapper);
     }
