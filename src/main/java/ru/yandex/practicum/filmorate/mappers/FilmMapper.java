@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,8 @@ public final class FilmMapper {
 
         if (request.hasDirectors()) {
             builder.directors(request.getDirectors());
+        } else {
+            builder.directors(new HashSet<>());
         }
 
         return builder.build();

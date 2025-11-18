@@ -30,19 +30,17 @@ public class EventDbRepository extends BaseDbRepositoryImpl<Event> {
             SELECT *
             FROM feed_events
             WHERE user_id = ?
-            ORDER BY id;
             """;
     @Language("SQL")
     private static final String FIND_ONE_EVENTS_QUERY = """
             SELECT *
             FROM feed_events
-            WHERE id = ?
+            WHERE event_id = ?
             """;
     @Language("SQL")
     private static final String FIND_ALL_EVENT_QUERY = """
             SELECT *
             FROM feed_events
-            ORDER BY id;
             """;
 
 

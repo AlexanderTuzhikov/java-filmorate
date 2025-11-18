@@ -41,15 +41,16 @@ public class ReviewService {
         Review review = reviewRepository.getById(request.getReviewId())
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + request.getReviewId() + " не найден"));
         Review updated = ReviewMapper.updateReviewFields(review, request);
-        saveReviewEvent(review.getUserId(), review.getReviewId(), Operation.UPDATE);
-        return ReviewMapper.mapToReviewDto(reviewRepository.update(updated));
+        Review updatedFromBd = reviewRepository.update(updated);
+        saveReviewEvent(updatedFromBd.getUserId(), updatedFromBd.getReviewId(), Operation.UPDATE);
+        return ReviewMapper.mapToReviewDto(updatedFromBd);
     }
 
     public void deleteReview(Long reviewId) {
         Review review = reviewRepository.getById(reviewId)
                 .orElseThrow(() -> new NotFoundException("Отзыв с id=" + reviewId + " не найден"));
-        saveReviewEvent(review.getUserId(), review.getReviewId(), Operation.REMOVE);
         reviewRepository.delete(reviewId);
+        saveReviewEvent(review.getUserId(), review.getReviewId(), Operation.REMOVE);
     }
 
     public ReviewDto getReview(Long reviewId) {
@@ -106,17 +107,6 @@ public class ReviewService {
                 .userId(userId)
                 .entityId(entityId)
                 .eventType(EventType.REVIEW)
-                .operation(operation)
-                .build();
-
-        eventRepository.save(newEvent);
-    }
-
-    private void saveLikeEvent(Long userId, Long entityId, Operation operation) {
-        NewEventRequest newEvent = NewEventRequest.builder()
-                .userId(userId)
-                .entityId(entityId)
-                .eventType(EventType.LIKE)
                 .operation(operation)
                 .build();
 
