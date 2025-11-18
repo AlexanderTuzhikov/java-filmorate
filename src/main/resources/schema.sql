@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS directors;
 
 CREATE TABLE directors
 (
-    id  INT AUTO_INCREMENT PRIMARY KEY,
+    id   INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(55) UNIQUE
 );
 
@@ -41,12 +41,13 @@ CREATE TABLE films
     FOREIGN KEY (mpa_id) REFERENCES mpa (id)
 );
 
-CREATE TABLE film_directors (
-    film_id INT,
-    director_id INT REFERENCES directors(id) ON DELETE CASCADE,
+CREATE TABLE film_directors
+(
+    film_id     INT,
+    director_id INT REFERENCES directors (id) ON DELETE CASCADE,
     PRIMARY KEY (film_id, director_id),
-    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
-    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+    FOREIGN KEY (film_id) REFERENCES films (id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors (id) ON DELETE CASCADE
 );
 
 CREATE TABLE users
@@ -95,7 +96,7 @@ CREATE TABLE films_likes
 
 CREATE TABLE feed_events
 (
-    id         INT AUTO_INCREMENT PRIMARY KEY,
+    event_id   INT AUTO_INCREMENT PRIMARY KEY,
     user_id    INT,
     entity_id  INT,
     event_type VARCHAR(20),

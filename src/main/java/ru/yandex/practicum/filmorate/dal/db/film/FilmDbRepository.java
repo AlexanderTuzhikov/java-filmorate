@@ -105,38 +105,38 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
     @Language("SQL")
     private static final String SEARCH_BY_TITLE_OR_DIRECTOR = """
-        SELECT f.*, COUNT(fl.user_id) AS likes
-        FROM films f
-        LEFT JOIN films_likes fl ON f.id = fl.film_id
-        LEFT JOIN film_directors fd ON f.id = fd.film_id
-        LEFT JOIN directors d ON fd.director_id = d.id
-        WHERE LOWER(f.name) LIKE ?
-           OR LOWER(d.name) LIKE ?
-        GROUP BY f.id
-        ORDER BY likes DESC
-        """;
+            SELECT f.*, COUNT(fl.user_id) AS likes
+            FROM films f
+            LEFT JOIN films_likes fl ON f.id = fl.film_id
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.id
+            WHERE LOWER(f.name) LIKE ?
+               OR LOWER(d.name) LIKE ?
+            GROUP BY f.id
+            ORDER BY likes DESC
+            """;
 
     @Language("SQL")
     private static final String SEARCH_BY_TITLE = """
-        SELECT f.*, COUNT(fl.user_id) AS likes
-        FROM films f
-        LEFT JOIN films_likes fl ON f.id = fl.film_id
-        WHERE LOWER(f.name) LIKE ?
-        GROUP BY f.id
-        ORDER BY likes DESC
-        """;
+            SELECT f.*, COUNT(fl.user_id) AS likes
+            FROM films f
+            LEFT JOIN films_likes fl ON f.id = fl.film_id
+            WHERE LOWER(f.name) LIKE ?
+            GROUP BY f.id
+            ORDER BY likes DESC
+            """;
 
     @Language("SQL")
     private static final String SEARCH_BY_DIRECTOR = """
-        SELECT f.*, COUNT(fl.user_id) AS likes
-        FROM films f
-        LEFT JOIN films_likes fl ON f.id = fl.film_id
-        LEFT JOIN film_directors fd ON f.id = fd.film_id
-        LEFT JOIN directors d ON fd.director_id = d.id
-        WHERE LOWER(d.name) LIKE ?
-        GROUP BY f.id
-        ORDER BY likes DESC
-        """;
+            SELECT f.*, COUNT(fl.user_id) AS likes
+            FROM films f
+            LEFT JOIN films_likes fl ON f.id = fl.film_id
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.id
+            WHERE LOWER(d.name) LIKE ?
+            GROUP BY f.id
+            ORDER BY likes DESC
+            """;
 
     private static final String FIND_COMMON_FILMS_SQL = """
             SELECT f.*, COALESCE(l.likes_count, 0) AS likes_count
@@ -220,13 +220,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             mpaRepository.findMpa(mpaId)
                     .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
-log.info("UPDATE filmId={}, genres from request = {}",
-        film.getId(), film.getGenres() == null ? "null" : film.getGenres().stream()
-                .map(g -> g.getId() + ":" + g.getName())
-                .toList()
-);
+        log.info("UPDATE filmId={}, genres from request = {}",
+                film.getId(), film.getGenres() == null ? "null" : film.getGenres().stream()
+                        .map(g -> g.getId() + ":" + g.getName())
+                        .toList()
+        );
         log.info("UPDATE filmId={}, directors from request = {}", film.getId(), film.getDirectors());
-// логирование
+
 
         update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
                 film.getDuration(), mpaId, film.getId());
@@ -272,7 +272,7 @@ log.info("UPDATE filmId={}, genres from request = {}",
                 directorsFromDb.stream()
                         .map(d -> d.getId() + ":" + d.getName())
                         .toList()
-        ); //логирование
+        );
 
 
         Set<Genre> genres = new HashSet<>(genreRepository.findFilmGenre(film.getId()));//Set.copyOf создает неизменяемые коллекции, заменила его
@@ -310,14 +310,6 @@ log.info("UPDATE filmId={}, genres from request = {}",
     }
 
     private void updateFilmGenres(Long filmId, Set<Genre> genres) {
-        /* логирование
-        log.info("update FilmGenres: filmId={}, genres arg = {}",
-                filmId,
-                genres == null ? "null" : genres.stream()
-                        .map(g -> g.getId() + ":" + g.getName())
-                        .toList()
-        );
-        */
         if (genres == null) {
             return;
         }
@@ -338,10 +330,6 @@ log.info("UPDATE filmId={}, genres from request = {}",
         for (Genre genre : genres) {
             jdbc.update(INSERT_FILM_GENRE_QUERY, filmId, genre.getId());
         }
-        /*
-        List<Long> current = findFilmGenresId(filmId);
-        log.info("updateFilmGenres: after update filmId={} genres in BD = {}", filmId, current);
-        */
     }
 
     private void deleteFilmGenre(Long filmId, Long genreId) {
@@ -404,7 +392,7 @@ log.info("UPDATE filmId={}, genres from request = {}",
             return List.of();
         }
 
-        // mapper вернул "сырые" Film из таблицы films - обогащаем их жанрами, MPA и режиссёрами
+
         return films.stream()
                 .map(this::getFilm)
                 .toList();

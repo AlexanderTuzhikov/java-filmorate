@@ -64,6 +64,7 @@ public class FilmController {
 
     @DeleteMapping("/{id}/like/{userId}")
     public ResponseEntity<Void> deleteLike(@PathVariable("id") Long id, @PathVariable("userId") Long userId) {
+        log.info("Получен запрос на удаление лайка к фильму id={}, от пользователя id={}", id, userId);
         filmService.deleteLike(id, userId);
         return ResponseEntity.ok().build();
     }
@@ -95,6 +96,7 @@ public class FilmController {
     @GetMapping("/director/{directorId}")
     public ResponseEntity<Collection<FilmDto>> getSortedFilms(@PathVariable("directorId") Long directorId, @RequestParam(defaultValue = "year") String sortBy
     ) {
+        log.info("Получен запрос на получение списка фильмов director id={} c сортировкой по {}", directorId, sortBy);
         return ResponseEntity.ok().body(filmService.getSortedFilms(directorId, sortBy));
     }
 
