@@ -28,12 +28,6 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
             FROM directors
             """;
     @Language("SQL")
-    private static final String FIND_FILM_DIRECTOR_QUERY = """
-            SELECT *
-            FROM directors
-            WHERE id IN (SELECT fd.director_id FROM film_directors AS fd WHERE film_id = ?)
-            """;
-    @Language("SQL")
     private static final String FIND_DIRECTOR_QUERY = """
             SELECT *
             FROM directors
@@ -70,10 +64,6 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
 
     public List<Director> findAllDirector() {
         return findMany(FIND_ALL_DIRECTOR_QUERY);
-    }
-
-    public List<Director> findFilmDirector(Long filmId) {
-        return jdbc.query(FIND_FILM_DIRECTOR_QUERY, mapper, filmId);
     }
 
     public Optional<Director> findDirector(Long directorId) {
