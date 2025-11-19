@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -15,7 +14,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@NoArgsConstructor
 public class NewFilmRequest {
     @NotBlank(message = "Название фильма не может быть пустым")
     private String name;

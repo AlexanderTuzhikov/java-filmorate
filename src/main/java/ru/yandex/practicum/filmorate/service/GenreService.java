@@ -21,6 +21,7 @@ public class GenreService {
     private final GenreDbRepository genreRepository;
 
     public List<GenreDto> getAllGenre() {
+        log.info("Получен запрос на получение списка genre");
         return genreRepository.findAllGenre().stream()
                 .map(GenreMapper::mapToGenreDto)
                 .sorted(Comparator.comparing(GenreDto::getId))
@@ -28,6 +29,7 @@ public class GenreService {
     }
 
     public GenreDto getGenre(Long genreId) {
+        log.info("Получен запрос на получение genre по id= {}", genreId);
         Genre genre = checkGenreExists(genreId);
         return mapToGenreDto(genre);
     }

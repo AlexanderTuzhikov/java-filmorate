@@ -88,8 +88,15 @@ public class DirectorDbRepository extends BaseDbRepositoryImpl<Director> {
         director.setId(id);
     }
 
-    public void updateDirector(Director director) {
+    public Director updateDirector(Director director) {
         update(UPDATE_DIRECTOR_QUERY, director.getName(), director.getId());
+        Optional<Director> updatedDirector = findDirector(director.getId());
+
+        if (updatedDirector.isEmpty()) {
+            log.warn("Ошибка обновления режиссера directorId= {}. Фильм не найден", director.getId());
+            throw new NotFoundException("Ошибка после обновления — режиссер не найден не найден");
+        }
+        return updatedDirector.get();
     }
 
     public void removeDirector(Long directorId) {

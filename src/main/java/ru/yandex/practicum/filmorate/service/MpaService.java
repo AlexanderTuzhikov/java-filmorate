@@ -21,6 +21,7 @@ public class MpaService {
     private final MpaDbRepository mpaRepository;
 
     public List<MpaDto> getAllMpa() {
+        log.info("Получен запрос на получение списка mpa");
         return mpaRepository.findAllMpa().stream()
                 .map(MpaMapper::mapToMpaDto)
                 .sorted(Comparator.comparing(MpaDto::getId))
@@ -28,6 +29,7 @@ public class MpaService {
     }
 
     public MpaDto getMpa(Long mapId) {
+        log.info("Получен запрос на получение mpa по id= {}", mapId);
         Mpa mpa = checkMpaExists(mapId);
         return mapToMpaDto(mpa);
     }

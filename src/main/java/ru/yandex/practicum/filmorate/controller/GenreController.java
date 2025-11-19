@@ -21,13 +21,11 @@ public class GenreController {
 
     @GetMapping
     public ResponseEntity<List<GenreDto>> getAllGenre() {
-        log.info("Получен запрос на получение списка genre");
         return ResponseEntity.ok().body(genreService.getAllGenre());
     }
 
     @GetMapping("/{genreId}")
     public ResponseEntity<GenreDto> getGenre(@PathVariable("genreId") Long genreId) {
-        log.info("Получен запрос на получение genre по id= {}", genreId);
         return ResponseEntity.ok().body(genreService.getGenre(genreId));
     }
 }

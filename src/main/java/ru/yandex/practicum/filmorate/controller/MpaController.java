@@ -21,13 +21,11 @@ public class MpaController {
 
     @GetMapping
     public ResponseEntity<List<MpaDto>> getAllMpa() {
-        log.info("Получен запрос на получение списка mpa");
         return ResponseEntity.ok().body(mpaService.getAllMpa());
     }
 
     @GetMapping("/{mapId}")
     public ResponseEntity<MpaDto> getMpa(@PathVariable("mapId") Long mapId) {
-        log.info("Получен запрос на получение mpa по id= {}", mapId);
         return ResponseEntity.ok().body(mpaService.getMpa(mapId));
     }
 }

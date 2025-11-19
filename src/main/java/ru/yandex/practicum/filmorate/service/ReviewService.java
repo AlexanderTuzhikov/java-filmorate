@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.review.ReviewDbRepository;
@@ -17,6 +18,7 @@ import ru.yandex.practicum.filmorate.model.Review;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ReviewService {
@@ -26,6 +28,7 @@ public class ReviewService {
     private final EventService eventService;
 
     public ReviewDto postReview(NewReviewRequest request) {
+        log.info("Получен запрос на добавление отзыва от пользователя id= {}", request.getUserId());
         checkUserExists(request.getUserId());
         checkFilmExists(request.getFilmId());
 
@@ -37,6 +40,7 @@ public class ReviewService {
     }
 
     public ReviewDto putReview(UpdateReviewRequest request) {
+        log.info("Получен запрос на обновление отзыва id= {}", request.getReviewId());
         Review review = checkReviewExists(request.getReviewId());
 
         Review updated = ReviewMapper.updateReviewFields(review, request);
@@ -47,6 +51,7 @@ public class ReviewService {
     }
 
     public void deleteReview(Long reviewId) {
+        log.info("Получен запрос на обновление удаление id= {}", reviewId);
         Review review = checkReviewExists(reviewId);
 
         reviewRepository.delete(reviewId);
@@ -54,12 +59,14 @@ public class ReviewService {
     }
 
     public ReviewDto getReview(Long reviewId) {
+        log.info("Получен запрос на получение отзыва id= {}", reviewId);
         Review review = checkReviewExists(reviewId);
 
         return ReviewMapper.mapToReviewDto(review);
     }
 
     public List<ReviewDto> getReviews(Long filmId, Integer count) {
+        log.info("Получен запрос на получение списка отзывов count= {}", count);
         int reviewsCount = (count == null) ? 10 : count;
         List<Review> reviews;
 
@@ -76,24 +83,28 @@ public class ReviewService {
     }
 
     public void putLike(Long reviewId, Long userId) {
+        log.info("Получен запрос на добавление лайка отзыву id= {} от пользователя id= {}", reviewId, userId);
         checkReviewExists(reviewId);
         checkUserExists(userId);
         reviewRepository.addLike(reviewId, userId);
     }
 
     public void putDislike(Long reviewId, Long userId) {
+        log.info("Получен запрос на добавление дизлайка отзыву id= {} от пользователя id= {}", reviewId, userId);
         checkReviewExists(reviewId);
         checkUserExists(userId);
         reviewRepository.addDislike(reviewId, userId);
     }
 
     public void deleteLike(Long reviewId, Long userId) {
+        log.info("Получен запрос на удаление лайка отзыву id= {} от пользователя id= {}", reviewId, userId);
         checkReviewExists(reviewId);
         checkUserExists(userId);
         reviewRepository.removeLike(reviewId, userId);
     }
 
     public void deleteDislike(Long reviewId, Long userId) {
+        log.info("Получен запрос на удаление дизлайка отзыву id= {} от пользователя id= {}", reviewId, userId);
         checkReviewExists(reviewId);
         checkUserExists(userId);
         reviewRepository.removeDislike(reviewId, userId);

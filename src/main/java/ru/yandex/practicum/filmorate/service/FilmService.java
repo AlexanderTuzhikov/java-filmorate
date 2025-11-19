@@ -32,6 +32,7 @@ public class FilmService {
     private final LikeService likeService;
 
     public FilmDto postFilm(NewFilmRequest request) {
+        log.info("Получен запрос на добавление фильма {}", request);
         Film film = mapToFilm(request);
         Film validFilm = filmValid(film);
         Film savedFilm = filmRepository.save(validFilm);
@@ -39,6 +40,7 @@ public class FilmService {
     }
 
     public FilmDto putFilm(@NotNull UpdateFilmRequest request) {
+        log.info("Получен запрос на обновление фильма id={}", request.getId());
         Film film = checkFilmExists(request.getId());
         Film updatedFilmLine = updateFilmFields(film, request);
         Film validFilm = filmValid(updatedFilmLine);
@@ -47,33 +49,39 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilms() {
+        log.info("Получен запрос на получение списка фильмов");
         return filmRepository.findAll().stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
 
     public FilmDto getFilm(Long filmId) {
+        log.info("Получен запрос на получение фильма");
         Film film = checkFilmExists(filmId);
         return mapToFilmDto(film);
     }
 
     public void deleteFilm(Long filmId) {
+        log.info("Получен запрос на удаление фильма  id={}", filmId);
         filmRepository.delete(filmId);
     }
 
     public void putLike(Long filmId, Long userId) {
+        log.info("Получен запрос на добавление лайка к фильму id={}, от пользователя id={}", filmId, userId);
         checkFilmExists(filmId);
         checkUserExists(userId);
         likeService.postLike(filmId, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
+        log.info("Получен запрос на удаление лайка к фильму id={}, от пользователя id={}", filmId, userId);
         checkFilmExists(filmId);
         checkUserExists(userId);
         likeService.deleteLike(filmId, userId);
     }
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
+        log.info("Получен запрос на получение списка фильмов director id={} c сортировкой по {}", directorId, sortBy);
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
@@ -82,6 +90,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        log.info("Запрос на получение общих фильмов для пользователей {} и {}", userId, friendId);
         checkUserExists(userId);
         checkUserExists(friendId);
 
@@ -93,6 +102,7 @@ public class FilmService {
     }
 
     public List<FilmDto> searchFilms(String query, String by) {
+        log.info("Запрос на поиск фильмов: query='{}', by='{}'", query, by);
         if (query == null || query.isBlank()) {
             throw new ValidationException("Параметр query не может быть пустым");
         }
@@ -120,6 +130,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopular(int count) {
+        log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
         return likeService.getFilmsPopular()
                 .stream()
                 .map(filmRepository::findById)
@@ -130,6 +141,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
+        log.info("Получен запрос на получение списка из count={} популярных фильмов по жанру {}", count, genreId);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
 
@@ -143,6 +155,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByYear(int count, long year) {
+        log.info("Получен запрос на получения списка из count={} популярных фильмов за {} год", count, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
 
@@ -156,6 +169,8 @@ public class FilmService {
     }
 
     public List<FilmDto> getFilmsPopularByGenreIdAndYear(int count, long genreId, long year) {
+        log.info("Получен запрос на получение списка из count={} популярных фильмов genreId={} за {} год",
+                count, genreId, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
         List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);

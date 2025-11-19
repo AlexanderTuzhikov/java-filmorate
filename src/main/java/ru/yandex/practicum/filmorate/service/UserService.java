@@ -31,6 +31,7 @@ public class UserService {
     private final FeedService feedService;
 
     public UserDto postUser(NewUserRequest request) {
+        log.info("Получен запрос на добавление пользователя {}", request);
         User user = mapToUser(request);
         User validUser = UserValidator.userValid(user);
         User savedUser = userRepository.save(validUser);
@@ -38,6 +39,7 @@ public class UserService {
     }
 
     public UserDto putUser(@NotNull UpdateUserRequest request) {
+        log.info("Получен запрос на обновление пользователя id={}", request.getId());
         User findUser = checkUserExists(request.getId());
         User user = updateUserFields(findUser, request);
         User validUser = UserValidator.userValid(user);
@@ -47,39 +49,46 @@ public class UserService {
     }
 
     public UserDto getUser(Long userId) {
+        log.info("Получен запрос на получение пользователя");
         User user = checkUserExists(userId);
         return mapToUserDto(user);
     }
 
     public List<UserDto> getUsers() {
+        log.info("Получен запрос на получение списка пользователей");
         return userRepository.findAll().stream()
                 .map(UserMapper::mapToUserDto)
                 .toList();
     }
 
     public void putFriend(Long userId, Long friendId) {
+        log.info("Получен запрос на добавление в друзья id={} от пользователя id={}", userId, friendId);
         checkUserExists(userId);
         checkUserExists(friendId);
         friendshipService.postFriendship(userId, friendId);
     }
 
     public void deleteFriend(Long userId, Long friendId) {
+        log.info("Получен запрос на удаление из друзей id={} от пользователя id={}", userId, friendId);
         checkUserExists(userId);
         checkUserExists(friendId);
         friendshipService.deleteFriendship(userId, friendId);
     }
 
     public void deleteUser(Long userId) {
+        log.info("Получен запрос на удаление пользователя  id={}", userId);
         userRepository.delete(userId);
     }
 
     public List<UserDto> getFriends(Long userId) {
+        log.info("Получен запрос на получение списка друзей");
         checkUserExists(userId);
 
         return friendshipService.getFriends(userId);
     }
 
     public List<UserDto> getCommonFriends(Long userId, Long friendId) {
+        log.info("Получен запрос на получение списка общих друзей id={} и id={}", userId, friendId);
         checkUserExists(userId);
         checkUserExists(friendId);
 
@@ -87,6 +96,7 @@ public class UserService {
     }
 
     public List<EventDto> getUserFeed(Long userId) {
+        log.info("Получен запрос на получение ленты событий пользователя id={}", userId);
         checkUserExists(userId);
 
         return feedService.getUserFeed(userId).stream()
@@ -96,6 +106,7 @@ public class UserService {
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
+        log.info("Получен запрос на получение рекомендованных фильмов от id={} ", userId);
         return filmService.getRecommendations(userId);
     }
 
