@@ -127,7 +127,6 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     public List<Film> findAll() {
-        String sql = filmRelationLoader.FIND_FILMS_WITH_RELATIONS_BASE + " ORDER BY film_id";
-        return filmRelationLoader.findFilmsWithRelations(sql);
+        return filmRelationLoader.findAllWithRelationsOrderedById();
     }
 }

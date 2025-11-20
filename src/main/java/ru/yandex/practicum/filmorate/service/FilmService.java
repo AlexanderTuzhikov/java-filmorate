@@ -140,39 +140,46 @@ public class FilmService {
 
     public List<FilmDto> getFilmsPopular(int count) {
         log.info("Получен запрос на получение списка из count={} популярных фильмов", count);
-        return likeService.getFilmsPopular()
-                .stream()
-                .map(filmRepository::findById)
-                .flatMap(Optional::stream)
+
+        List<Long> popularFilmsIds = likeService.getFilmsPopular();
+        List<Long> limitedIds = popularFilmsIds.stream()
+
+        List<Film> films = filmSearch.findFilmsWithRelationsByIdsPreservingOrder(limitedIds);
+
+        return films.stream()
                 .map(filmMapper::mapToFilmDto)
-                .limit(count)
                 .toList();
     }
 
     public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
         log.info("Получен запрос на получение списка из count={} популярных фильмов по жанру {}", count, genreId);
-        List<Long> popularFilms = likeService.getFilmsPopular();
-        List<Long> filmsByGenre = filmSearch.findAllFilmsByGenreId(genreId);
 
-        return popularFilms.stream()
+        List<Long> popularFilmsIds = likeService.getFilmsPopular();
+        List<Long> filmsByGenre = filmSearch.findAllFilmsByGenreId(genreId);
+        List<Long> filteredIds = popularFilmsIds.stream()
                 .filter(filmsByGenre::contains)
                 .limit(count)
-                .map(filmRepository::findById)
-                .flatMap(Optional::stream)
+                .toList();
+
+        List<Film> films = filmSearch.findFilmsWithRelationsByIdsPreservingOrder(filteredIds);
+
+        return films.stream()
                 .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
     public List<FilmDto> getFilmsPopularByYear(int count, long year) {
         log.info("Получен запрос на получения списка из count={} популярных фильмов за {} год", count, year);
+
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmSearch.findFilmsByYear(year);
-
-        return popularFilms.stream()
+        List<Long> filteredIds = popularFilms.stream()
                 .filter(filmsByYear::contains)
                 .limit(count)
-                .map(filmRepository::findById)
-                .flatMap(Optional::stream)
+                .toList();
+
+        List<Film> films = filmSearch.findFilmsWithRelationsByIdsPreservingOrder(filteredIds);
+        return films.stream()
                 .map(filmMapper::mapToFilmDto)
                 .toList();
     }
@@ -180,18 +187,22 @@ public class FilmService {
     public List<FilmDto> getFilmsPopularByGenreIdAndYear(int count, long genreId, long year) {
         log.info("Получен запрос на получение списка из count={} популярных фильмов genreId={} за {} год",
                 count, genreId, year);
+
         List<Long> popularFilms = likeService.getFilmsPopular();
         List<Long> filmsByYear = filmSearch.findFilmsByYear(year);
         List<Long> filmsByGenre = filmSearch.findAllFilmsByGenreId(genreId);
 
-        return popularFilms.stream()
+        List<Long> filteredIds = popularFilms.stream()
                 .filter(filmsByYear::contains)
                 .filter(filmsByGenre::contains)
                 .limit(count)
-                .map(filmRepository::findById)
-                .flatMap(Optional::stream)
+                .toList();
+
+        List<Film> films = filmSearch.findFilmsWithRelationsByIdsPreservingOrder(filteredIds);
+        return films.stream()
                 .map(filmMapper::mapToFilmDto)
                 .toList();
+
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
