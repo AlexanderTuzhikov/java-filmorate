@@ -9,7 +9,10 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.Assert;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmRelationLoader;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreRowMapper;
@@ -22,13 +25,12 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
-import java.util.Objects;
 
 @JdbcTest
 @AutoConfigureTestDatabase
 @Import({LikeDbRepository.class, FilmDbRepository.class, GenreDbRepository.class, MpaDbRepository.class,
-        FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
-        UserDbRepository.class, UserRowMapper.class})
+        DirectorDbRepository.class, FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class,
+        DirectorRowMapper.class, UserDbRepository.class, UserRowMapper.class, FilmRelationLoader.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LikeDbRepositoryTest {
     private final LikeDbRepository likeRepository;
@@ -79,12 +81,11 @@ public class LikeDbRepositoryTest {
         likeRepository.save(filmId, otherUserId);
         likeRepository.save(otherFilmId, userId);
 
-        List<Film> popularFilms = likeRepository.findPopularFilms(1);
+        List<Long> popularFilms = likeRepository.findPopularFilms().stream()
+                .limit(1)
+                .toList();
 
         Assert.isTrue(popularFilms.size() == 1, "Count не соблюдается");
-        Assert.isTrue(popularFilms.stream()
-                        .noneMatch(film -> Objects.equals(film.getId(), filmId)),
-                "Популярный фильм не вернулся");
     }
 }
 

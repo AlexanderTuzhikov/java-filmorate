@@ -1,21 +1,20 @@
 package ru.yandex.practicum.filmorate.mappers;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import ru.yandex.practicum.filmorate.dto.mpa.MpaDto;
 import ru.yandex.practicum.filmorate.enums.MpaName;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class MpaMapper {
-    public static MpaDto mapToMpaDto(Mpa mpa) {
-        return MpaDto.builder()
-                .id(mpa.getId())
-                .name(toMpaDtoName(mpa.getName()))
-                .build();
-    }
+@Mapper(componentModel = "spring")
+public interface MpaMapper {
+    @Mapping(target = "name", source = "name", qualifiedByName = "toMpaDtoName")
+    MpaDto mapToMpaDto(Mpa mpa);
 
-    private static String toMpaDtoName(MpaName name) {
+    @Named("toMpaDtoName")
+    default String toMpaDtoName(MpaName name) {
+        if (name == null) return null;
         return name.toString().replace("_", "-");
     }
 }

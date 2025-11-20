@@ -19,7 +19,6 @@ import java.util.Optional;
 @Qualifier
 @Slf4j
 public class UserDbRepository extends BaseDbRepositoryImpl<User> {
-
     public UserDbRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
     }
@@ -82,3 +81,4 @@ public class UserDbRepository extends BaseDbRepositoryImpl<User> {
         return findMany(FIND_ALL_USERS_QUERY);
     }
 }
+

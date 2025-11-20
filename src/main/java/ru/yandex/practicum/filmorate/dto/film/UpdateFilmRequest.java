@@ -3,11 +3,11 @@ package ru.yandex.practicum.filmorate.dto.film;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -20,7 +20,8 @@ public class UpdateFilmRequest {
     private LocalDate releaseDate;
     private int duration;
     private Mpa mpa;
-    private Set<Genre> genres = new HashSet<>();
+    private Set<Genre> genres; // убрала инициализацию
+    private Set<Director> directors;
 
     public boolean hasName() {
         return !(name == null || name.isBlank());
@@ -43,6 +44,10 @@ public class UpdateFilmRequest {
     }
 
     public boolean hasGenres() {
-        return !(genres.isEmpty());
+        return genres != null;
+    }
+
+    public boolean hasDirectors() {
+        return directors != null;
     }
 }

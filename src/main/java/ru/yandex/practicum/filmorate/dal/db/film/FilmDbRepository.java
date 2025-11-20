@@ -2,26 +2,21 @@ package ru.yandex.practicum.filmorate.dal.db.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundFilm;
-import ru.yandex.practicum.filmorate.exception.NotFoundGenre;
-import ru.yandex.practicum.filmorate.exception.NotFoundMpa;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 @Qualifier
@@ -29,12 +24,19 @@ import java.util.Set;
 public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     private final GenreDbRepository genreRepository;
     private final MpaDbRepository mpaRepository;
+    private final DirectorDbRepository directorDbRepository;
+    private final FilmRelationLoader filmRelationLoader;
 
-    public FilmDbRepository(JdbcTemplate jdbc, RowMapper<Film> mapper, GenreDbRepository genreRepository,
-                            MpaDbRepository mpaRepository) {
+    public FilmDbRepository(JdbcTemplate jdbc,
+                            RowMapper<Film> mapper,
+                            GenreDbRepository genreRepository,
+                            MpaDbRepository mpaRepository,
+                            DirectorDbRepository directorDbRepository, FilmRelationLoader filmRelationLoader) {
         super(jdbc, mapper);
         this.genreRepository = genreRepository;
         this.mpaRepository = mpaRepository;
+        this.directorDbRepository = directorDbRepository;
+        this.filmRelationLoader = filmRelationLoader;
     }
 
     @Language("SQL")
@@ -44,39 +46,13 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
             """;
     @Language("SQL")
     private static final String UPDATE_FILM_QUERY = """
-            UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
+            UPDATE films
+            SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?
             WHERE id = ?
-            """;
-    @Language("SQL")
-    private static final String FIND_ONE_FILM_QUERY = """
-            SELECT *
-            FROM films
-            WHERE id = ?;
-            """;
-    @Language("SQL")
-    private static final String FIND_ALL_FILM_QUERY = """
-            SELECT *
-            FROM films
             """;
     @Language("SQL")
     private static final String DELETE_FILM_QUERY = """
             DELETE FROM films WHERE id = ?
-            """;
-    @Language("SQL")
-    private static final String INSERT_FILM_GENRE_QUERY = """
-            INSERT INTO film_genres (film_id, genre_id)
-            VALUES (?, ?);
-            """;
-    @Language("SQL")
-    private static final String FIND_ALL_FILM_GENRE_ID_QUERY = """
-            SELECT genre_id
-            FROM film_genres AS fg
-            WHERE film_id = ?
-            """;
-    @Language("SQL")
-    private static final String DELETE_FILM_GENRE_QUERY = """
-            DELETE FROM film_genres
-            WHERE film_id = ? AND genre_id = ?;
             """;
 
     public Film save(Film film) {
@@ -84,20 +60,26 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
-        long id = insert(INSERT_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
-                film.getDuration(), mpaId);
-        insertFilmGenres(id, film.getGenres());
-        Optional<Film> savedFilm = findById(id);
+        long id = insert(
+                INSERT_FILM_QUERY,
+                film.getName(),
+                film.getDescription(),
+                Date.valueOf(film.getReleaseDate()),
+                film.getDuration(),
+                mpaId
+        );
 
-        if (savedFilm.isEmpty()) {
-            log.error("Ошибка сохранения фильма filmId= {}. Фильм не найден", id);
-            throw new InternalServerException("Ошибка после сохранения фильм не найден");
-        }
+        genreRepository.insertFilmGenres(id, film.getGenres());
+        film = film.toBuilder().id(id).build();
+        directorDbRepository.saveFilmDirectors(film);
 
-        return savedFilm.get();
+        return findById(id).orElseThrow(() -> {
+            log.error("Ошибка сохранения фильма filmId={}. Фильм не найден", id);
+            return new InternalServerException("Ошибка после сохранения фильм не найден");
+        });
     }
 
     public Film update(Film film) {
@@ -105,20 +87,34 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
 
         if (mpaId != null) {
             mpaRepository.findMpa(mpaId)
-                    .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA с id=" + mpaId + " не найден"));
+                    .orElseThrow(() -> new NotFoundException("Рейтинг MPA с id=" + mpaId + " не найден"));
         }
 
-        update(UPDATE_FILM_QUERY, film.getName(), film.getDescription(), Date.valueOf(film.getReleaseDate()),
-                film.getDuration(), mpaId, film.getId());
-        updateFilmGenres(film.getId(), film.getGenres());
-        Optional<Film> updateFilm = findById(film.getId());
+        log.info("UPDATE filmId={}, genres from request = {}",
+                film.getId(),
+                film.getGenres() == null ? "null" : film.getGenres().stream()
+                        .map(g -> g.getId() + ":" + g.getName())
+                        .toList()
+        );
+        log.info("UPDATE filmId={}, directors from request = {}", film.getId(), film.getDirectors());
 
-        if (updateFilm.isEmpty()) {
+        update(
+                UPDATE_FILM_QUERY,
+                film.getName(),
+                film.getDescription(),
+                Date.valueOf(film.getReleaseDate()),
+                film.getDuration(),
+                mpaId,
+                film.getId()
+        );
+
+        genreRepository.updateFilmGenres(film.getId(), film.getGenres());
+        directorDbRepository.updateFilmDirectors(film);
+
+        return findById(film.getId()).orElseThrow(() -> {
             log.warn("Ошибка обновления фильма filmId= {}. Фильм не найден", film.getId());
-            throw new NotFoundFilm("Ошибка после обновления — фильм не найден");
-        }
-
-        return updateFilm.get();
+            return new NotFoundException("Ошибка после обновления — фильм не найден");
+        });
     }
 
     public boolean delete(Long filmId) {
@@ -126,76 +122,11 @@ public class FilmDbRepository extends BaseDbRepositoryImpl<Film> {
     }
 
     public Optional<Film> findById(Long filmId) {
-        return findOne(FIND_ONE_FILM_QUERY, filmId).map(this::getFilm);
+        List<Film> films = filmRelationLoader.findFilmsWithRelationsByIds(List.of(filmId));
+        return films.stream().findFirst();
     }
 
     public List<Film> findAll() {
-        return findMany(FIND_ALL_FILM_QUERY).stream()
-                .map(this::getFilm)
-                .toList();
-    }
-
-    private Film getFilm(Film film) {
-        Set<Genre> genres = Set.copyOf(genreRepository.findFilmGenre(film.getId()));
-        Mpa mpa = Optional.ofNullable(film.getMpa())
-                .map(Mpa::getId)
-                .flatMap(mpaRepository::findMpa)
-                .orElseThrow(() -> new NotFoundMpa("Рейтинг MPA не найден"));
-
-        return Film.builder()
-                .id(film.getId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
-                .mpa(mpa)
-                .genres(genres)
-                .build();
-    }
-
-    private void insertFilmGenres(Long filmId, Set<Genre> genres) {
-        if (genres == null || genres.isEmpty()) return;
-
-        for (Genre genre : genres) {
-            Long genreId = genre.getId();
-            genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
-        }
-
-        for (Genre genre : genres) {
-            jdbc.update(INSERT_FILM_GENRE_QUERY, filmId, genre.getId());
-        }
-    }
-
-    private void updateFilmGenres(Long filmId, Set<Genre> genres) {
-        if (genres == null || genres.isEmpty()) return;
-
-        for (Genre genre : genres) {
-            Long genreId = genre.getId();
-            genreRepository.findGenre(genreId)
-                    .orElseThrow(() -> new NotFoundGenre("Жанр не найден: id=" + genreId));
-        }
-
-        List<Long> existGenre = findFilmGenresId(filmId);
-
-        for (Long genreId : existGenre) {
-            deleteFilmGenre(filmId, genreId);
-        }
-
-        for (Genre genre : genres) {
-            jdbc.update(INSERT_FILM_GENRE_QUERY, filmId, genre.getId());
-        }
-    }
-
-    private void deleteFilmGenre(Long filmId, Long genreId) {
-        int rowsDeleted = jdbc.update(DELETE_FILM_GENRE_QUERY, filmId, genreId);
-
-        if (rowsDeleted == 0) {
-            log.warn("Не удалось удалить жанр genreId= {}, filmId= {}", genreId, filmId);
-        }
-    }
-
-    private @NotNull List<Long> findFilmGenresId(Long filmId) {
-        return jdbc.queryForList(FIND_ALL_FILM_GENRE_ID_QUERY, Long.class, filmId);
+        return filmRelationLoader.findAllWithRelationsOrderedById();
     }
 }

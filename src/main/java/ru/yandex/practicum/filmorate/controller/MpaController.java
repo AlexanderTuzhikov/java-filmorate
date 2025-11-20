@@ -14,20 +14,18 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/mpa")
 @AllArgsConstructor
+@RequestMapping("/mpa")
 public class MpaController {
     private final MpaService mpaService;
 
     @GetMapping
     public ResponseEntity<List<MpaDto>> getAllMpa() {
-        log.info("Получен запрос на получение списка mpa");
         return ResponseEntity.ok().body(mpaService.getAllMpa());
     }
 
     @GetMapping("/{mapId}")
     public ResponseEntity<MpaDto> getMpa(@PathVariable("mapId") Long mapId) {
-        log.info("Получен запрос на получение mpa по id= {}", mapId);
         return ResponseEntity.ok().body(mpaService.getMpa(mapId));
     }
 }

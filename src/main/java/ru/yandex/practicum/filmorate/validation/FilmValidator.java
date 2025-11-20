@@ -20,6 +20,7 @@ public class FilmValidator {
                 .duration(film.getDuration())
                 .mpa(film.getMpa())
                 .genres(film.getGenres())
+                .directors(film.getDirectors())
                 .build();
     }
 
@@ -32,4 +33,5 @@ public class FilmValidator {
 
         return film.getReleaseDate();
     }
+
 }

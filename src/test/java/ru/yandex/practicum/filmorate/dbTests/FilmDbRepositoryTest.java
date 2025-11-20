@@ -9,15 +9,23 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.Assert;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmRelationLoader;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmDbSearcher;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreRowMapper;
+import ru.yandex.practicum.filmorate.dal.db.like.LikeDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.mpa.MpaRowMapper;
+import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.user.UserRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,19 +35,33 @@ import java.util.Set;
 
 @JdbcTest
 @AutoConfigureTestDatabase
-@Import({FilmDbRepository.class, GenreDbRepository.class, MpaDbRepository.class,
-        FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class})
+@Import({FilmDbRepository.class, GenreDbRepository.class, MpaDbRepository.class, DirectorDbRepository.class,
+        FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class, DirectorRowMapper.class, UserDbRepository.class,
+        UserRowMapper.class, FilmRelationLoader.class, FilmDbSearcher.class, LikeDbRepository.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmDbRepositoryTest {
     private final FilmDbRepository filmRepository;
+    private final UserDbRepository userRepository;
+    private final LikeDbRepository likeRepository;
+    private final FilmDbSearcher filmSearch;
 
     private Film film;
     private Long filmId;
+    private Film otherFilm;
+    private Long otherFilmId;
+    private Long userId;
+    private Long otherUserId;
 
     @BeforeEach
     void setUp() {
         film = filmRepository.save(DataTest.TEST_FILM);
         filmId = film.getId();
+        otherFilm = filmRepository.save(DataTest.OTHER_TEST_FILM);
+        otherFilmId = otherFilm.getId();
+        User user = userRepository.save(DataTest.TEST_USER);
+        userId = user.getId();
+        User otherUser = userRepository.save(DataTest.OTHER_TEST_USER);
+        otherUserId = otherUser.getId();
     }
 
     @Test
@@ -107,6 +129,19 @@ public class FilmDbRepositoryTest {
         Optional<Film> filmOptional = filmRepository.findById(filmId);
 
         Assert.isTrue(filmOptional.isPresent(), "Фильм не вернулся");
+    }
+
+    @Test
+    @DisplayName("Получение рекомендаций по фильмам из БД")
+    public void testGetRecommendations() {
+        likeRepository.save(filmId, userId);
+        likeRepository.save(filmId, otherUserId);
+        likeRepository.save(otherFilmId, otherUserId);
+        List<Film> recommendationFilm = filmSearch.findRecommendationsFilms(userId);
+
+        Assert.notEmpty(recommendationFilm, "Список фильмов не вернулся");
+        Assert.isTrue(recommendationFilm.size() == 1, "Вернулись оба фильма");
+        Assert.isTrue(recommendationFilm.contains(otherFilm), "Порекомендован не тот фильм");
     }
 }
 
