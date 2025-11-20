@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmDbSearcher;
 import ru.yandex.practicum.filmorate.dal.db.user.UserDbRepository;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
@@ -29,7 +31,9 @@ import static ru.yandex.practicum.filmorate.validation.FilmValidator.filmValid;
 public class FilmService {
     private final FilmDbRepository filmRepository;
     private final UserDbRepository userRepository;
+    private final DirectorDbRepository directorRepository;
     private final LikeService likeService;
+    private final FilmDbSearcher filmSearch;
 
     public FilmDto postFilm(NewFilmRequest request) {
         log.info("Получен запрос на добавление фильма {}", request);
@@ -82,11 +86,13 @@ public class FilmService {
 
     public Collection<FilmDto> getSortedFilms(Long directorId, String sortBy) {
         log.info("Получен запрос на получение списка фильмов director id={} c сортировкой по {}", directorId, sortBy);
+        checkDirectorExists(directorId);
+
         if (!sortBy.equals("year") && !sortBy.equals("likes")) {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
 
-        return filmRepository.getSortedFilms(directorId, sortBy);
+        return filmSearch.getSortedFilms(directorId, sortBy);
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
@@ -94,7 +100,7 @@ public class FilmService {
         checkUserExists(userId);
         checkUserExists(friendId);
 
-        List<Film> films = filmRepository.findCommonFilms(userId, friendId);
+        List<Film> films = filmSearch.findCommonFilms(userId, friendId);
 
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
@@ -122,7 +128,7 @@ public class FilmService {
             throw new ValidationException("Параметр by должен содержать 'title', 'director' или оба значения через запятую");
         }
 
-        List<Film> films = filmRepository.searchFilms(query, byTitle, byDirector);
+        List<Film> films = filmSearch.searchFilms(query, byTitle, byDirector);
 
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
@@ -143,7 +149,7 @@ public class FilmService {
     public List<FilmDto> getFilmsPopularByGenreId(int count, long genreId) {
         log.info("Получен запрос на получение списка из count={} популярных фильмов по жанру {}", count, genreId);
         List<Long> popularFilms = likeService.getFilmsPopular();
-        List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
+        List<Long> filmsByGenre = filmSearch.findAllFilmsByGenreId(genreId);
 
         return popularFilms.stream()
                 .filter(filmsByGenre::contains)
@@ -157,7 +163,7 @@ public class FilmService {
     public List<FilmDto> getFilmsPopularByYear(int count, long year) {
         log.info("Получен запрос на получения списка из count={} популярных фильмов за {} год", count, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
-        List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
+        List<Long> filmsByYear = filmSearch.findFilmsByYear(year);
 
         return popularFilms.stream()
                 .filter(filmsByYear::contains)
@@ -172,8 +178,8 @@ public class FilmService {
         log.info("Получен запрос на получение списка из count={} популярных фильмов genreId={} за {} год",
                 count, genreId, year);
         List<Long> popularFilms = likeService.getFilmsPopular();
-        List<Long> filmsByYear = filmRepository.findFilmsByYear(year);
-        List<Long> filmsByGenre = filmRepository.findAllFilmsByGenreId(genreId);
+        List<Long> filmsByYear = filmSearch.findFilmsByYear(year);
+        List<Long> filmsByGenre = filmSearch.findAllFilmsByGenreId(genreId);
 
         return popularFilms.stream()
                 .filter(filmsByYear::contains)
@@ -186,7 +192,7 @@ public class FilmService {
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
-        return filmRepository.findRecommendationsFilms(userId).stream()
+        return filmSearch.findRecommendationsFilms(userId).stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
@@ -198,5 +204,9 @@ public class FilmService {
 
     private Film checkFilmExists(Long filmId) {
         return filmRepository.findById(filmId).orElseThrow(() -> new NotFoundException("Фильм с id=" + filmId + " не найден"));
+    }
+
+    private void checkDirectorExists(Long directorId) {
+        directorRepository.findDirector(directorId).orElseThrow(() -> new NotFoundException("Режиссер с id=" + directorId + " не найден"));
     }
 }

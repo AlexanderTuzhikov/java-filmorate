@@ -12,7 +12,9 @@ import org.springframework.util.Assert;
 import ru.yandex.practicum.filmorate.dal.db.director.DirectorDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.director.DirectorRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmDbRepository;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmRelationLoader;
 import ru.yandex.practicum.filmorate.dal.db.film.FilmRowMapper;
+import ru.yandex.practicum.filmorate.dal.db.film.FilmDbSearcher;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreDbRepository;
 import ru.yandex.practicum.filmorate.dal.db.genre.GenreRowMapper;
 import ru.yandex.practicum.filmorate.dal.db.like.LikeDbRepository;
@@ -35,12 +37,13 @@ import java.util.Set;
 @AutoConfigureTestDatabase
 @Import({FilmDbRepository.class, GenreDbRepository.class, MpaDbRepository.class, DirectorDbRepository.class,
         FilmRowMapper.class, GenreRowMapper.class, MpaRowMapper.class, DirectorRowMapper.class, UserDbRepository.class,
-        UserRowMapper.class, LikeDbRepository.class})
+        UserRowMapper.class, FilmRelationLoader.class, FilmDbSearcher.class, LikeDbRepository.class})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmDbRepositoryTest {
     private final FilmDbRepository filmRepository;
     private final UserDbRepository userRepository;
     private final LikeDbRepository likeRepository;
+    private final FilmDbSearcher filmSearch;
 
     private Film film;
     private Long filmId;
@@ -134,7 +137,7 @@ public class FilmDbRepositoryTest {
         likeRepository.save(filmId, userId);
         likeRepository.save(filmId, otherUserId);
         likeRepository.save(otherFilmId, otherUserId);
-        List<Film> recommendationFilm = filmRepository.findRecommendationsFilms(userId);
+        List<Film> recommendationFilm = filmSearch.findRecommendationsFilms(userId);
 
         Assert.notEmpty(recommendationFilm, "Список фильмов не вернулся");
         Assert.isTrue(recommendationFilm.size() == 1, "Вернулись оба фильма");
