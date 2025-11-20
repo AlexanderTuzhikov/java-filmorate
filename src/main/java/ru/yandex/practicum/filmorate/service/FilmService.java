@@ -34,13 +34,14 @@ public class FilmService {
     private final DirectorDbRepository directorRepository;
     private final LikeService likeService;
     private final FilmDbSearcher filmSearch;
+    private final FilmMapper filmMapper;
 
     public FilmDto postFilm(NewFilmRequest request) {
         log.info("Получен запрос на добавление фильма {}", request);
-        Film film = mapToFilm(request);
+        Film film = filmMapper.mapToFilm(request);
         Film validFilm = filmValid(film);
         Film savedFilm = filmRepository.save(validFilm);
-        return mapToFilmDto(savedFilm);
+        return filmMapper.mapToFilmDto(savedFilm);
     }
 
     public FilmDto putFilm(@NotNull UpdateFilmRequest request) {
@@ -49,20 +50,20 @@ public class FilmService {
         Film updatedFilmLine = updateFilmFields(film, request);
         Film validFilm = filmValid(updatedFilmLine);
         Film updatedFilm = filmRepository.update(validFilm);
-        return mapToFilmDto(updatedFilm);
+        return filmMapper.mapToFilmDto(updatedFilm);
     }
 
     public List<FilmDto> getFilms() {
         log.info("Получен запрос на получение списка фильмов");
         return filmRepository.findAll().stream()
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
     public FilmDto getFilm(Long filmId) {
         log.info("Получен запрос на получение фильма");
         Film film = checkFilmExists(filmId);
-        return mapToFilmDto(film);
+        return filmMapper.mapToFilmDto(film);
     }
 
     public void deleteFilm(Long filmId) {
@@ -92,7 +93,9 @@ public class FilmService {
             throw new InternalServerException("Некорректный параметр сортировки.");
         }
 
-        return filmSearch.getSortedFilms(directorId, sortBy);
+        return filmSearch.getSortedFilms(directorId, sortBy).stream()
+                .map(filmMapper::mapToFilmDto)
+                .toList();
     }
 
     public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
@@ -103,7 +106,7 @@ public class FilmService {
         List<Film> films = filmSearch.findCommonFilms(userId, friendId);
 
         return films.stream()
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
@@ -131,7 +134,7 @@ public class FilmService {
         List<Film> films = filmSearch.searchFilms(query, byTitle, byDirector);
 
         return films.stream()
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
@@ -141,7 +144,7 @@ public class FilmService {
                 .stream()
                 .map(filmRepository::findById)
                 .flatMap(Optional::stream)
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .limit(count)
                 .toList();
     }
@@ -156,7 +159,7 @@ public class FilmService {
                 .limit(count)
                 .map(filmRepository::findById)
                 .flatMap(Optional::stream)
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
@@ -170,7 +173,7 @@ public class FilmService {
                 .limit(count)
                 .map(filmRepository::findById)
                 .flatMap(Optional::stream)
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
@@ -187,13 +190,13 @@ public class FilmService {
                 .limit(count)
                 .map(filmRepository::findById)
                 .flatMap(Optional::stream)
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 
     public List<FilmDto> getRecommendations(Long userId) {
         return filmSearch.findRecommendationsFilms(userId).stream()
-                .map(FilmMapper::mapToFilmDto)
+                .map(filmMapper::mapToFilmDto)
                 .toList();
     }
 

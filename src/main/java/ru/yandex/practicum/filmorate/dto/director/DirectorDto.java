@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.dto.director;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @Builder(toBuilder = true)

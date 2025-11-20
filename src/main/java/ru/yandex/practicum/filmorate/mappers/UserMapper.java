@@ -1,34 +1,18 @@
 package ru.yandex.practicum.filmorate.mappers;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import org.mapstruct.Mapper;
 import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.user.UserDto;
 import ru.yandex.practicum.filmorate.model.User;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class UserMapper {
-    public static User mapToUser(NewUserRequest request) {
-        return User.builder()
-                .email(request.getEmail())
-                .login(request.getLogin())
-                .name(request.getName())
-                .birthday(request.getBirthday())
-                .build();
-    }
+@Mapper(componentModel = "spring")
+public interface UserMapper {
+    User mapToUser(NewUserRequest request);
 
-    public static UserDto mapToUserDto(User user) {
-        return UserDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .login(user.getLogin())
-                .name(user.getName())
-                .birthday(user.getBirthday())
-                .build();
-    }
+    UserDto mapToUserDto(User user);
 
-    public static User updateUserFields(User user, UpdateUserRequest request) {
+    static User updateUserFields(User user, UpdateUserRequest request) {
         User.UserBuilder builder = user.toBuilder();
 
         if (request.hasEmail()) {

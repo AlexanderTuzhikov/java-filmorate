@@ -7,8 +7,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.db.base.BaseDbRepositoryImpl;
-import ru.yandex.practicum.filmorate.dto.film.FilmDto;
-import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -154,7 +152,7 @@ public class FilmDbSearcher extends BaseDbRepositoryImpl<Film> {
         return filmRelationLoader.enrichFilmsPreservingOrder(baseFilms);
     }
 
-    public Collection<FilmDto> getSortedFilms(Long directorId, String sort) {
+    public Collection<Film> getSortedFilms(Long directorId, String sort) {
         String query = SORT_FILMS_BY_LIKES_QUERY;
 
         if ("year".equals(sort)) {
@@ -162,11 +160,10 @@ public class FilmDbSearcher extends BaseDbRepositoryImpl<Film> {
         }
 
         List<Film> baseFilms = findMany(query, directorId);
-        List<Film> filmsWithRelations = filmRelationLoader.enrichFilmsPreservingOrder(baseFilms);
 
-        return filmsWithRelations.stream()
-                .map(FilmMapper::mapToFilmDto)
-                .toList();
+        return filmRelationLoader.enrichFilmsPreservingOrder(baseFilms);
+
+
     }
 
     public List<Film> findRecommendationsFilms(Long userId) {

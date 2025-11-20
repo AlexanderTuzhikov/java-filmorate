@@ -12,18 +12,18 @@ import ru.yandex.practicum.filmorate.model.Mpa;
 import java.util.Comparator;
 import java.util.List;
 
-import static ru.yandex.practicum.filmorate.mappers.MpaMapper.mapToMpaDto;
-
 @Slf4j
 @Service
 @AllArgsConstructor
 public class MpaService {
     private final MpaDbRepository mpaRepository;
+    private final MpaMapper mpaMapper;
+
 
     public List<MpaDto> getAllMpa() {
         log.info("Получен запрос на получение списка mpa");
         return mpaRepository.findAllMpa().stream()
-                .map(MpaMapper::mapToMpaDto)
+                .map(mpaMapper::mapToMpaDto)
                 .sorted(Comparator.comparing(MpaDto::getId))
                 .toList();
     }
@@ -31,7 +31,7 @@ public class MpaService {
     public MpaDto getMpa(Long mapId) {
         log.info("Получен запрос на получение mpa по id= {}", mapId);
         Mpa mpa = checkMpaExists(mapId);
-        return mapToMpaDto(mpa);
+        return mpaMapper.mapToMpaDto(mpa);
     }
 
     private Mpa checkMpaExists(Long mapId) {

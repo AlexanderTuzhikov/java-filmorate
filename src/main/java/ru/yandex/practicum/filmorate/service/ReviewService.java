@@ -26,17 +26,18 @@ public class ReviewService {
     private final UserDbRepository userRepository;
     private final FilmDbRepository filmRepository;
     private final EventService eventService;
+    private final ReviewMapper reviewMapper;
 
     public ReviewDto postReview(NewReviewRequest request) {
         log.info("Получен запрос на добавление отзыва от пользователя id= {}", request.getUserId());
         checkUserExists(request.getUserId());
         checkFilmExists(request.getFilmId());
 
-        Review review = ReviewMapper.mapToReview(request);
+        Review review = reviewMapper.mapToReview(request);
         Review saved = reviewRepository.save(review);
         eventService.postEvent(saved.getUserId(), saved.getReviewId(), EventType.REVIEW, Operation.ADD);
 
-        return ReviewMapper.mapToReviewDto(saved);
+        return reviewMapper.mapToReviewDto(saved);
     }
 
     public ReviewDto putReview(UpdateReviewRequest request) {
@@ -47,7 +48,7 @@ public class ReviewService {
         Review updatedFromBd = reviewRepository.update(updated);
         eventService.postEvent(updatedFromBd.getUserId(), updatedFromBd.getReviewId(), EventType.REVIEW, Operation.UPDATE);
 
-        return ReviewMapper.mapToReviewDto(updatedFromBd);
+        return reviewMapper.mapToReviewDto(updatedFromBd);
     }
 
     public void deleteReview(Long reviewId) {
@@ -62,7 +63,7 @@ public class ReviewService {
         log.info("Получен запрос на получение отзыва id= {}", reviewId);
         Review review = checkReviewExists(reviewId);
 
-        return ReviewMapper.mapToReviewDto(review);
+        return reviewMapper.mapToReviewDto(review);
     }
 
     public List<ReviewDto> getReviews(Long filmId, Integer count) {
@@ -78,7 +79,7 @@ public class ReviewService {
         }
 
         return reviews.stream()
-                .map(ReviewMapper::mapToReviewDto)
+                .map(reviewMapper::mapToReviewDto)
                 .collect(Collectors.toList());
     }
 

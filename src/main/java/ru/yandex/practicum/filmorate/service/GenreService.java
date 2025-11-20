@@ -12,18 +12,18 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.Comparator;
 import java.util.List;
 
-import static ru.yandex.practicum.filmorate.mappers.GenreMapper.mapToGenreDto;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class GenreService {
     private final GenreDbRepository genreRepository;
+    private final GenreMapper genreMapper;
 
     public List<GenreDto> getAllGenre() {
         log.info("Получен запрос на получение списка genre");
         return genreRepository.findAllGenre().stream()
-                .map(GenreMapper::mapToGenreDto)
+                .map(genreMapper::mapToGenreDto)
                 .sorted(Comparator.comparing(GenreDto::getId))
                 .toList();
     }
@@ -31,7 +31,7 @@ public class GenreService {
     public GenreDto getGenre(Long genreId) {
         log.info("Получен запрос на получение genre по id= {}", genreId);
         Genre genre = checkGenreExists(genreId);
-        return mapToGenreDto(genre);
+        return genreMapper.mapToGenreDto(genre);
     }
 
     private Genre checkGenreExists(Long genreId) {

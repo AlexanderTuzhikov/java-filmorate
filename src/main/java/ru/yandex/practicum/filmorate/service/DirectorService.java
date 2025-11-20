@@ -20,26 +20,27 @@ import static ru.yandex.practicum.filmorate.mappers.DirectorMapper.*;
 @RequiredArgsConstructor
 public class DirectorService {
     private final DirectorDbRepository directorDbRepository;
+    private final DirectorMapper directorMapper;
 
     public List<DirectorDto> getAllDirectors() {
         log.info("Получен запрос на получение списка всех directors");
         return directorDbRepository.findAllDirector().stream()
-                .map(DirectorMapper::mapToDirectorDto)
+                .map(directorMapper::mapToDirectorDto)
                 .toList();
     }
 
     public DirectorDto getDirectorById(Long directorDd) {
         log.info("Получен запрос на получение director id = {}", directorDd);
-        return directorDbRepository.findDirector(directorDd).map(DirectorMapper::mapToDirectorDto)
+        return directorDbRepository.findDirector(directorDd).map(directorMapper::mapToDirectorDto)
                 .orElseThrow(() -> new NotFoundException("Genre с id=" + directorDd + " не найден"));
     }
 
     public DirectorDto addDirector(NewDirectorRequest request) {
         log.info("Получен запрос на добавление director");
-        Director director = mapToDirector(request);
+        Director director = directorMapper.mapToDirector(request);
         directorDbRepository.addDirector(director);
         log.info("Режиссер создан. ID= {}", director.getId());
-        return mapToDirectorDto(director);
+        return directorMapper.mapToDirectorDto(director);
     }
 
     public DirectorDto updateDirector(UpdateDirectorRequest request) {
@@ -48,7 +49,7 @@ public class DirectorService {
         Director updatedDirectorLine = updateDirectorFields(director, request);
         Director updatedDirector = directorDbRepository.updateDirector(updatedDirectorLine);
         log.info("Режиссер обновлен. ID= {}", director.getId());
-        return mapToDirectorDto(updatedDirector);
+        return directorMapper.mapToDirectorDto(updatedDirector);
     }
 
     public void removeDirectorById(Long directorId) {

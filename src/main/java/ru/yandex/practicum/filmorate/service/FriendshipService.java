@@ -18,6 +18,7 @@ import java.util.List;
 public class FriendshipService {
     private final FriendshipDbRepository friendshipRepository;
     private final EventService eventService;
+    private final UserMapper userMapper;
 
     public void postFriendship(Long userId, Long friendId) {
         boolean status = friendshipRepository.save(userId, friendId);
@@ -41,13 +42,13 @@ public class FriendshipService {
 
     public List<UserDto> getFriends(Long userId) {
         return friendshipRepository.findAllFriends(userId).stream()
-                .map(UserMapper::mapToUserDto)
+                .map(userMapper::mapToUserDto)
                 .toList();
     }
 
     public List<UserDto> getCommonFriends(Long userId, Long friendId) {
         return friendshipRepository.findCommonFriends(userId, friendId).stream()
-                .map(UserMapper::mapToUserDto)
+                .map(userMapper::mapToUserDto)
                 .toList();
     }
 }

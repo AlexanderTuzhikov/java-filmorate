@@ -29,13 +29,15 @@ public class UserService {
     private final FriendshipService friendshipService;
     private final FilmService filmService;
     private final FeedService feedService;
+    private final EventMapper eventMapper;
+    private final UserMapper userMapper;
 
     public UserDto postUser(NewUserRequest request) {
         log.info("Получен запрос на добавление пользователя {}", request);
-        User user = mapToUser(request);
+        User user = userMapper.mapToUser(request);
         User validUser = UserValidator.userValid(user);
         User savedUser = userRepository.save(validUser);
-        return mapToUserDto(savedUser);
+        return userMapper.mapToUserDto(savedUser);
     }
 
     public UserDto putUser(@NotNull UpdateUserRequest request) {
@@ -45,19 +47,19 @@ public class UserService {
         User validUser = UserValidator.userValid(user);
         User updatedUser = userRepository.update(validUser);
 
-        return mapToUserDto(updatedUser);
+        return userMapper.mapToUserDto(updatedUser);
     }
 
     public UserDto getUser(Long userId) {
         log.info("Получен запрос на получение пользователя");
         User user = checkUserExists(userId);
-        return mapToUserDto(user);
+        return userMapper.mapToUserDto(user);
     }
 
     public List<UserDto> getUsers() {
         log.info("Получен запрос на получение списка пользователей");
         return userRepository.findAll().stream()
-                .map(UserMapper::mapToUserDto)
+                .map(userMapper::mapToUserDto)
                 .toList();
     }
 
@@ -100,7 +102,7 @@ public class UserService {
         checkUserExists(userId);
 
         return feedService.getUserFeed(userId).stream()
-                .map(EventMapper::mapEventDto)
+                .map(eventMapper::mapEventDto)
                 .sorted(Comparator.comparing(EventDto::getTimestamp))
                 .toList();
     }

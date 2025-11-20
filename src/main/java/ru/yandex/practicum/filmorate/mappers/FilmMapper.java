@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.mappers;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 import ru.yandex.practicum.filmorate.dto.film.FilmDto;
 import ru.yandex.practicum.filmorate.dto.film.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequest;
@@ -13,41 +13,18 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@Slf4j
-public final class FilmMapper {
+@Mapper(componentModel = "spring")
+public interface FilmMapper {
 
-    public static Film mapToFilm(@NotNull NewFilmRequest request) {
+    Film mapToFilm(NewFilmRequest request);
 
-        return Film.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .releaseDate(request.getReleaseDate())
-                .duration(request.getDuration())
-                .mpa(request.getMpa())
-                .genres(request.getGenres())
-                .directors(request.getDirectors())
-                .build();
-    }
+    @Mapping(target = "genres", source = "genres", qualifiedByName = "sortGenres")
+    FilmDto mapToFilmDto(Film film);
 
-    public static FilmDto mapToFilmDto(@NotNull Film film) {
-        return FilmDto.builder()
-                .id(film.getId())
-                .name(film.getName())
-                .description(film.getDescription())
-                .releaseDate(film.getReleaseDate())
-                .duration(film.getDuration())
-                .mpa(film.getMpa())
-                .genres(film.getGenres().stream()
-                        .sorted(Comparator.comparing(Genre::getId))
-                        .collect(Collectors.toCollection(LinkedHashSet::new)))
-                .directors(film.getDirectors())
-                .build();
-    }
-
-    public static Film updateFilmFields(@NotNull Film film, @NotNull UpdateFilmRequest request) {
+    static Film updateFilmFields(@NotNull Film film, @NotNull UpdateFilmRequest request) {
         Film.FilmBuilder builder = film.toBuilder();
 
         if (request.hasName()) {
@@ -82,5 +59,13 @@ public final class FilmMapper {
         }
 
         return builder.build();
+    }
+
+    @Named("sortGenres")
+    default Set<Genre> sortGenres(Set<Genre> genres) {
+        if (genres == null) return null;
+        return genres.stream()
+                .sorted(Comparator.comparing(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
