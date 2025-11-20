@@ -186,4 +186,14 @@ public class FilmDbSearcher extends BaseDbRepositoryImpl<Film> {
     public List<Long> findAllFilmsByGenreId(Long genreId) {
         return jdbc.queryForList(FIND_ALL_FILMS_BY_GENRE_ID_QUERY, Long.class, genreId);
     }
+
+    public List<Film> findFilmsWithRelationsByIdsPreservingOrder(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<Film> baseFilms = ids.stream()
+                .map(id -> Film.builder().id(id).build())
+                .toList();
+        return filmRelationLoader.enrichFilmsPreservingOrder(baseFilms);
+    }
 }
