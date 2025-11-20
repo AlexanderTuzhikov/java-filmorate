@@ -31,7 +31,7 @@ public class FilmRelationLoader extends BaseDbRepositoryImpl<Film> {
     }
 
     @Language("SQL")
-    public static final String FIND_FILMS_WITH_RELATIONS_BASE = """
+    private static final String FIND_FILMS_WITH_RELATIONS_BASE = """
             SELECT
                 f.id AS film_id,
                 f.name AS film_name,
@@ -51,6 +51,11 @@ public class FilmRelationLoader extends BaseDbRepositoryImpl<Film> {
             LEFT JOIN film_directors fd ON f.id = fd.film_id
             LEFT JOIN directors d ON fd.director_id = d.id
             """;
+
+    public List<Film> findAllWithRelationsOrderedById() {
+        String sql = FIND_FILMS_WITH_RELATIONS_BASE + " ORDER BY film_id";
+        return findFilmsWithRelations(sql);
+    }
 
     protected List<Film> findFilmsWithRelations(String sql, Object... params) {
         Map<Long, Film> films = new LinkedHashMap<>();
