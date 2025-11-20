@@ -2,6 +2,7 @@
 Template repository for Filmorate project.
 
 ### ER-диаграмма базы данных Filmorate
+
 ![ER-диаграмма базы данных Filmorate](FilmorateProject.png)
 
 ## Описание схемы базы данных Filmorate
@@ -84,24 +85,23 @@ FROM users;
 ### 2. Получить пользователя по ID
 
 ```sql
-Копировать код
 SELECT *
 FROM users
-WHERE user_id = {id};
-Возвращает одного пользователя с указанным user_id.
+WHERE ID = ?;
 ```
+Возвращает одного пользователя с указанным user_id.
+
 {id} нужно заменить на конкретное число или параметр.
 
 ### 3. Получить друзей пользователя
 
 ```sql
-Копировать код
 SELECT *
 FROM users
-WHERE user_id IN (
+WHERE ID IN (
     SELECT friend_id
     FROM users_friends
-    WHERE user_id = {id}
+    WHERE user_id = ?
 );
 ```
 Внутренний подзапрос получает список ID друзей пользователя {id}.
@@ -111,17 +111,16 @@ WHERE user_id IN (
 ### 4. Получить общих друзей двух пользователей
 
 ```sql
-Копировать код
 SELECT *
 FROM users
-WHERE user_id IN (
+WHERE ID IN (
     SELECT friend_id
     FROM users_friends
-    WHERE user_id = {id}
+    WHERE user_id = ?
       AND friend_id IN (
           SELECT friend_id
           FROM users_friends
-          WHERE user_id = {other_id}
+          WHERE user_id = ?
       )
 );
 ```
@@ -146,7 +145,7 @@ FROM films;
 ```sql
 SELECT *
 FROM films
-WHERE film_id = {id};
+WHERE ID = ?;
 ```
 
 Возвращает один фильм с указанным film_id.
@@ -157,10 +156,10 @@ WHERE film_id = {id};
 SELECT f.*,
        COUNT(fl.user_id) AS rating
 FROM films AS f
-LEFT JOIN films_likes AS fl ON f.film_id = fl.film_id
-GROUP BY f.film_id
+LEFT JOIN films_likes AS fl ON f.ID = fl.film_id
+GROUP BY f.ID
 ORDER BY rating DESC
-LIMIT {count};
+LIMIT ?;
 ```
 
 LEFT JOIN соединяет фильмы с лайками, чтобы учитывать фильмы без лайков.
